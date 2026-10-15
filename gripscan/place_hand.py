@@ -121,6 +121,9 @@ def place(hand, board, sdf, starts=60, seed=0):
     r2 = np.array(board["r2"]["press_centre"])
     r4 = np.array(board["r4"]["press_centre"])
     r1 = np.array(board["r1"]["target"])
+    # the bumper sits in an opening below the uncut basemesh surface; the finger can only
+    # reach the surface, so lift the target along the bumper normal onto it
+    r1 = r1 + np.array(board["r1"]["normal"]) * max(0.0, -float(sdf(r1[None])[0]))
     r_idx = radii["index"][0]
     abxy = np.mean([t["top_centre"] for t in board["thumb_targets"] if t["name"].startswith("abxy")], axis=0)
     top_z = board["top_face"]["z"]
@@ -135,7 +138,7 @@ def place(hand, board, sdf, starts=60, seed=0):
         out += list(transform(x, pads["middle"][None])[0] - r2)
         out += list(transform(x, pads["ring"][None])[0] - r4)
         d_r1 = np.linalg.norm(transform(x, idx_axis) - r1, axis=1).min() - r_idx
-        out.append(0.7 * d_r1)
+        out.append(3.0 * d_r1)  # the index finger must lie on R1
         pen_f = np.minimum(0, sdf(transform(x, fs)) - fr)       # finger capsules sinking in
         pen_p = np.minimum(0, sdf(transform(x, ps)))            # palm skin sinking in
         out += list(1.5 * pen_f) + list(1.5 * pen_p)
