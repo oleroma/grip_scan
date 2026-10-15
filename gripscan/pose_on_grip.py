@@ -38,8 +38,8 @@ def main():
     p.add_argument("--init", default="data/hand_on_grip.json", help="rigid placement to start from")
     p.add_argument("--out", default="data/hand_posed_on_grip.json")
     p.add_argument("--starts", type=int, default=30)
-    p.add_argument("--swell", default=None, help="x,y,z of the palm swell apex (default: outermost "
-                   "point of the right handle)")
+    p.add_argument("--swell", default=None, help="x,y,z of the palm swell apex (default: the right "
+                   "handle's rearmost point, most negative Y, i.e. towards the player)")
     a = p.parse_args()
     hand, board = json.load(open(a.hand)), json.load(open(a.board))
     sdf = MeshSDF(*load_obj(a.grip))
@@ -54,8 +54,8 @@ def main():
     if a.swell:
         swell = np.array([float(c) for c in a.swell.split(",")])
     else:
-        right = V[(V[:, 0] > 0) & (V[:, 2] < board["top_face"]["z"] - 10)]
-        swell = right[np.argmax(right[:, 0])]
+        right = V[V[:, 0] > 20]
+        swell = right[np.argmin(right[:, 1])]
 
     r1 = np.array(board["r1"]["target"])
     # the bumper sits in an opening below the uncut basemesh surface; the finger can only
@@ -69,6 +69,21 @@ def main():
         q = {n: relaxed[n] + d for n, d in zip(names, delta)}
         q.update(offs)
         return model.local(q)
+
+    # anatomical limits on the absolute angles (degrees); the search may not leave them
+    def limits(n):
+        if n.endswith("_spread"):
+            return -15.0, 15.0
+        if n == "palm_arch":
+            return 0.0, 25.0
+        if n.startswith("thumb"):
+            return -180.0, 180.0
+        return -10.0, 110.0
+    lo = np.array([np.radians(limits(n)[0]) - relaxed[n] for n in names])
+    hi = np.array([np.radians(limits(n)[1]) - relaxed[n] for n in names])
+    # relaxed values already outside a limit (measurement noise) keep a little room
+    lo, hi = np.minimum(lo, -1e-3), np.maximum(hi, 1e-3)
+    bounds = (np.concatenate([np.full(6, -np.inf), lo]), np.concatenate([np.full(6, np.inf), hi]))
 
     def hollow(J):
         """Centre of the palm's crease: between wrist and middle MCP, on the palm skin."""
@@ -93,24 +108,22 @@ def main():
         out += [W_POSE * d / tol[n] for n, d in zip(names, delta)]
         return np.array(out)
 
-    # starts: the given rigid placement plus random orientations with the index on R1;
-    # a short run from each, then the best few are refined
+    # start from the placement that best matches the four contacts of a real grip
+    # (palm crease on the swell, index base on R1, middle pad on R2, ring pad on R4),
+    # then refine with the joints free. Random orientations found non-grasps.
     J0 = joints(np.zeros(len(names)))
-    ic = J0[FINGERS["index"][0]] + 0.6 * (J0[FINGERS["index"][2]] - J0[FINGERS["index"][0]])
-    rng = np.random.default_rng(0)
-    init = json.load(open(a.init))["placement"]
-    starts = [np.concatenate([init["rotvec"], init["translation"]])]
-    for _ in range(a.starts):
-        rv = Rotation.random(random_state=rng.integers(1 << 31)).as_rotvec()
-        starts.append(np.concatenate([rv, r1 - Rotation.from_rotvec(rv).apply(ic)]))
-    coarse = []
-    for x0 in starts:
-        sol = least_squares(resid, np.concatenate([x0, np.zeros(len(names))]), loss="soft_l1",
-                            f_scale=3.0, max_nfev=40)
-        coarse.append(sol)
-    coarse.sort(key=lambda s: s.cost)
-    sol = min((least_squares(resid, c.x, loss="soft_l1", f_scale=3.0, max_nfev=600) for c in coarse[:4]),
-              key=lambda s: s.cost)
+    ids = FINGERS["index"]
+    A = np.array([hollow(J0), J0[ids[0]] + 0.5 * (J0[ids[2]] - J0[ids[0]]),
+                  pad_point(J0, radii, "middle"), pad_point(J0, radii, "ring")])
+    B = np.array([swell, r1, r2, r4])
+    ca, cb = A.mean(0), B.mean(0)
+    U, _, Vt = np.linalg.svd((A - ca).T @ (B - cb))
+    R = Vt.T @ np.diag([1, 1, np.sign(np.linalg.det(Vt.T @ U.T))]) @ U.T
+    x0 = np.concatenate([Rotation.from_matrix(R).as_rotvec(), cb - R @ ca])
+    print("contact alignment of the relaxed hand (mm):",
+          np.round(np.linalg.norm(A @ R.T + x0[3:] - B, axis=1), 1))
+    sol = least_squares(resid, np.concatenate([x0, np.zeros(len(names))]), loss="soft_l1",
+                        f_scale=3.0, max_nfev=800, bounds=bounds)
     x, delta = sol.x[:6], sol.x[6:]
     J = joints(delta)
     Jw = transform(x, J)
