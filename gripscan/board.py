@@ -5,11 +5,13 @@ X right, Y down the sheet, Z = -(board normal) as OpenCV defines it. Points
 above the paper (towards the camera) have negative Z in OpenCV's board frame;
 `height` arguments below are positive-up and converted internally.
 """
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
 
 import cv2
 import numpy as np
 
+# the printed A4 sheet
 SQUARES_X = 9
 SQUARES_Y = 13
 SQUARE_MM = 20.0
@@ -17,9 +19,31 @@ MARKER_MM = 15.0
 DICTIONARY = cv2.aruco.DICT_5X5_100
 
 
-def make_board():
-    d = cv2.aruco.getPredefinedDictionary(DICTIONARY)
-    return cv2.aruco.CharucoBoard((SQUARES_X, SQUARES_Y), SQUARE_MM, MARKER_MM, d)
+@dataclass
+class BoardSpec:
+    """Which ChArUco board was photographed. The printed sheet is the default;
+    the screen board writes its own spec (sizes from the monitor's pixel pitch)."""
+    squares_x: int = SQUARES_X
+    squares_y: int = SQUARES_Y
+    square_mm: float = SQUARE_MM
+    marker_mm: float = MARKER_MM
+    dictionary: int = DICTIONARY
+    surface_offset_mm: float = 0.0  # pattern lies this far below the surface the hand touches
+    source: str = "printed A4 sheet"
+
+    @classmethod
+    def load(cls, path=None):
+        return cls(**json.load(open(path))) if path else cls()
+
+    def save(self, path):
+        with open(path, "w") as f:
+            json.dump(asdict(self), f, indent=1)
+
+
+def make_board(spec=None):
+    spec = spec or BoardSpec()
+    d = cv2.aruco.getPredefinedDictionary(spec.dictionary)
+    return cv2.aruco.CharucoBoard((spec.squares_x, spec.squares_y), spec.square_mm, spec.marker_mm, d)
 
 
 @dataclass

@@ -18,7 +18,7 @@ import json
 import cv2
 import numpy as np
 
-from .board import Camera, detect, estimate_pose, pixels_to_board
+from .board import BoardSpec, Camera, detect, estimate_pose, make_board, pixels_to_board
 from .landmarks import FINGERS, NAMES, SEGMENTS, Landmarker
 
 # joint-centre height above the paper, mm (typical adult hand; refined later)
@@ -68,7 +68,9 @@ def main():
     p.add_argument("--model", default=None, help="hand_landmarker.task (default: models/)")
     p.add_argument("--out", default="data/hand_flat.json")
     p.add_argument("--annotated", default=None)
+    p.add_argument("--board-spec", default=None, help="board json (default: printed sheet)")
     a = p.parse_args()
+    spec = BoardSpec.load(a.board_spec)
 
     image = cv2.imread(a.image)
     if image is None:
@@ -77,7 +79,7 @@ def main():
     size = (image.shape[1], image.shape[0])
     if size != cam.size:
         cam = cam.scaled_to(size)
-    d = detect(image)
+    d = detect(image, make_board(spec))
     if d is None:
         raise SystemExit("board not found; keep more of the sheet visible around the hand")
     pose = estimate_pose(*d, cam)
@@ -85,7 +87,7 @@ def main():
     if lm is None:
         raise SystemExit("no hand found in the photo")
     px, handed, score = lm
-    pts, fingers, palm = measure(px, cam, pose, heights())
+    pts, fingers, palm = measure(px, cam, pose, heights() + spec.surface_offset_mm)
 
     result = {
         "units": "mm",
@@ -98,6 +100,7 @@ def main():
         "palm": palm,
         "landmarks_board_mm": {n: [round(float(v), 2) for v in pts[i]] for i, n in enumerate(NAMES)},
         "landmark_heights_mm": dict(DEFAULT_HEIGHT_MM),
+        "board_spec": spec.source, "surface_offset_mm": spec.surface_offset_mm,
     }
     with open(a.out, "w") as f:
         json.dump(result, f, indent=1)

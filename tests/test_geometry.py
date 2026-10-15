@@ -9,19 +9,30 @@ the right positions and distances.
 import cv2
 import numpy as np
 
-from gripscan.board import Camera, detect, estimate_pose, pixels_to_board
+from gripscan.board import BoardSpec, Camera, detect, estimate_pose, make_board, pixels_to_board
 from gripscan.marker_sheet import DPI, mm, render
 
 PX_PER_MM = DPI / 25.4
 
 
-def synthetic_view(rvec, tvec, K, size):
-    page = render()
+def printed_sheet():
     from gripscan.board import SQUARES_X, SQUARE_MM
+    page = render()
     x0 = (page.shape[1] - mm(SQUARES_X * SQUARE_MM)) // 2
-    y0 = mm(8)
     # board mm -> page px
-    A = np.array([[PX_PER_MM, 0, x0], [0, PX_PER_MM, y0], [0, 0, 1]])
+    return page, np.array([[PX_PER_MM, 0, x0], [0, PX_PER_MM, mm(8)], [0, 0, 1]]), BoardSpec()
+
+
+def screen_board(pitch=0.23310):
+    from gripscan import screen_board as sb
+    w, h = 2560, 1440
+    img = sb.render(w, h, pitch)
+    x0 = (w - sb.SQUARES_X * sb.SQUARE_PX) // 2
+    spec = BoardSpec(sb.SQUARES_X, sb.SQUARES_Y, sb.SQUARE_PX * pitch, sb.MARKER_PX * pitch)
+    return img, np.array([[1 / pitch, 0, x0], [0, 1 / pitch, 40], [0, 0, 1]]), spec
+
+
+def synthetic_view(rvec, tvec, K, size, page, A):
     R = cv2.Rodrigues(rvec)[0]
     H = K @ np.column_stack([R[:, 0], R[:, 1], tvec.ravel()])  # board mm (z=0) -> image px
     M = H @ np.linalg.inv(A)
@@ -30,7 +41,7 @@ def synthetic_view(rvec, tvec, K, size):
     return np.clip(img + noise, 0, 255).astype(np.uint8)
 
 
-def main():
+def check(name, page, A, spec):
     size = (3000, 4000)
     K = np.array([[3100.0, 0, 1500], [0, 3100.0, 2000], [0, 0, 1]])
     cam = Camera(K, np.zeros(5), size)
@@ -40,12 +51,12 @@ def main():
     centre_board = np.array([90.0, 130.0, -450.0])  # camera centre in board frame
     tvec = (-R @ centre_board).reshape(3, 1)
 
-    img = synthetic_view(rvec, tvec, K, size)
-    d = detect(img)
+    img = synthetic_view(rvec, tvec, K, size, page, A)
+    d = detect(img, make_board(spec))
     assert d is not None, "board not detected"
     pose = estimate_pose(*d, cam)
     c = pose.camera_centre()
-    print(f"corners {pose.n_corners}, reproj {pose.reproj_px:.3f} px, camera centre {np.round(c, 1)}")
+    print(f"[{name}] corners {pose.n_corners}, reproj {pose.reproj_px:.3f} px, camera centre {np.round(c, 1)}")
     assert np.linalg.norm(c - centre_board) < 3.0, "camera position off by more than 3 mm"
 
     # two "joints" 10 mm above the paper, 45 mm apart, near the sheet edge (worst parallax)
@@ -61,7 +72,12 @@ def main():
     print(f"position error {err:.2f} mm, length {L:.2f} mm (true 45), ignoring height {L_flat:.2f} mm")
     assert err < 0.5, "back-projected position off by more than 0.5 mm"
     assert abs(L - 45.0) < 0.3, "segment length off by more than 0.3 mm"
-    print("OK")
+    print(f"[{name}] OK")
+
+
+def main():
+    check("printed sheet", *printed_sheet())
+    check("screen board", *screen_board())
 
 
 if __name__ == "__main__":

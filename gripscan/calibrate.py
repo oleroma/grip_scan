@@ -13,11 +13,11 @@ import json
 import cv2
 import numpy as np
 
-from .board import Camera, detect, make_board
+from .board import BoardSpec, Camera, detect, make_board
 
 
-def calibrate(paths):
-    board = make_board()
+def calibrate(paths, spec=None):
+    board = make_board(spec)
     objs, imgs, size, used = [], [], None, []
     for p in paths:
         im = cv2.imread(p)
@@ -45,9 +45,10 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("images", nargs="+")
     p.add_argument("--out", default="data/camera.json")
+    p.add_argument("--board-spec", default=None, help="board json (default: printed sheet)")
     a = p.parse_args()
     paths = [f for g in a.images for f in (glob.glob(g) or [g])]
-    cam, rms, used = calibrate(paths)
+    cam, rms, used = calibrate(paths, BoardSpec.load(a.board_spec))
     with open(a.out, "w") as f:
         json.dump({**cam.to_dict(), "rms_px": rms, "images": used}, f, indent=1)
     print(f"calibrated from {len(used)} photos, RMS {rms:.3f} px -> {a.out}")
