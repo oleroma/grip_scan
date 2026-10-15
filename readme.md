@@ -37,6 +37,6 @@ The MediaPipe hand model goes in `models/hand_landmarker.task`
    `python -m gripscan.calibrate "photos/calib/*.jpg" --out data/camera.json`.
 3. Lay the hand palm down on the sheet, fingers straight and slightly spread,
    and shoot from straight above at 40-50 cm. Then
-   `python -m gripscan.measure_flat photos/flat.jpg --camera data/camera.json --out data/hand_flat.json --annotated out/flat_check.jpg`.
+   `python -m gripscan.measure_flat "photos/flat/*.jpg" --camera data/camera.json --out data/hand_flat.json --annotated-dir out/flat_check`.
 
 Test the geometry chain without photos: `python -m tests.test_geometry`.

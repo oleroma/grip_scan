@@ -4,3 +4,4 @@ __pycache__/
 models/
 out/
 photos/
+data/hand_*.json

@@ -1,14 +1,14 @@
 {
  "K": [
   [
-   2916.560798528119,
+   2922.7786635684274,
    0.0,
-   2001.0718011278682
+   2008.5856522258032
   ],
   [
    0.0,
-   2917.541976897051,
-   1532.66503209103
+   2923.774198914196,
+   1547.1568883127372
   ],
   [
    0.0,
@@ -17,32 +17,32 @@
   ]
  ],
  "dist": [
-  0.07045793645355643,
-  -0.3620339843250182,
-  0.0008913134093610084,
-  7.044268722662275e-05,
-  0.5300547987300925
+  0.14556335912331633,
+  -0.8132367661553317,
+  -3.663813870419663e-05,
+  2.3650857249523604e-05,
+  1.277003713345032
  ],
  "size": [
   4096,
   3072
  ],
- "rms_px": 0.9693769096355698,
+ "rms_px": 0.9414084168735151,
  "images": [
-  "photos/calib\\IMG20261015233147.jpg",
-  "photos/calib\\IMG20261015233148.jpg",
-  "photos/calib\\IMG20261015233150.jpg",
-  "photos/calib\\IMG20261015233153.jpg",
-  "photos/calib\\IMG20261015233156.jpg",
-  "photos/calib\\IMG20261015233158.jpg",
-  "photos/calib\\IMG20261015233201.jpg",
-  "photos/calib\\IMG20261015233203.jpg",
-  "photos/calib\\IMG20261015233204.jpg",
-  "photos/calib\\IMG20261015233206.jpg",
-  "photos/calib\\IMG20261015233211.jpg",
-  "photos/calib\\IMG20261015233214.jpg",
-  "photos/calib\\IMG20261015233217.jpg",
-  "photos/calib\\IMG20261015233220.jpg",
-  "photos/calib\\IMG20261015233223.jpg"
+  "photos/calib\\IMG20261015234043.jpg",
+  "photos/calib\\IMG20261015234044.jpg",
+  "photos/calib\\IMG20261015234045.jpg",
+  "photos/calib\\IMG20261015234046.jpg",
+  "photos/calib\\IMG20261015234047.jpg",
+  "photos/calib\\IMG20261015234049.jpg",
+  "photos/calib\\IMG20261015234050.jpg",
+  "photos/calib\\IMG20261015234052.jpg",
+  "photos/calib\\IMG20261015234053.jpg",
+  "photos/calib\\IMG20261015234056.jpg",
+  "photos/calib\\IMG20261015234058.jpg",
+  "photos/calib\\IMG20261015234100.jpg",
+  "photos/calib\\IMG20261015234101.jpg",
+  "photos/calib\\IMG20261015234104.jpg",
+  "photos/calib\\IMG20261015234105.jpg"
  ]
 }
