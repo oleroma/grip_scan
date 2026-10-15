@@ -55,4 +55,7 @@ class Landmarker:
         h, w = image_bgr.shape[:2]
         px = np.array([[p.x * w, p.y * h] for p in res.hand_landmarks[0]])
         cat = res.handedness[0][0]
-        return px, cat.category_name, float(cat.score)
+        # MediaPipe labels handedness as if the image were mirrored (selfie camera);
+        # phone photos from the rear camera are not, so the label is swapped here.
+        hand = {"Left": "right", "Right": "left"}.get(cat.category_name, cat.category_name)
+        return px, hand, float(cat.score)

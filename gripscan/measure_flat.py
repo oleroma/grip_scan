@@ -93,7 +93,7 @@ def main():
         "units": "mm",
         "method": "flat photo on ChArUco sheet, MediaPipe landmarks back-projected to joint heights",
         "image": a.image,
-        "handedness_mediapipe": handed, "handedness_score": round(score, 3),
+        "handedness": handed, "handedness_score": round(score, 3),
         "board": {"corners_used": pose.n_corners, "reprojection_rms_px": round(pose.reproj_px, 3),
                   "camera_height_mm": round(float(-pose.camera_centre()[2]), 1)},
         "fingers": fingers,

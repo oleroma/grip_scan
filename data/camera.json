@@ -1,0 +1,48 @@
+{
+ "K": [
+  [
+   2916.560798528119,
+   0.0,
+   2001.0718011278682
+  ],
+  [
+   0.0,
+   2917.541976897051,
+   1532.66503209103
+  ],
+  [
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "dist": [
+  0.07045793645355643,
+  -0.3620339843250182,
+  0.0008913134093610084,
+  7.044268722662275e-05,
+  0.5300547987300925
+ ],
+ "size": [
+  4096,
+  3072
+ ],
+ "rms_px": 0.9693769096355698,
+ "images": [
+  "photos/calib\\IMG20261015233147.jpg",
+  "photos/calib\\IMG20261015233148.jpg",
+  "photos/calib\\IMG20261015233150.jpg",
+  "photos/calib\\IMG20261015233153.jpg",
+  "photos/calib\\IMG20261015233156.jpg",
+  "photos/calib\\IMG20261015233158.jpg",
+  "photos/calib\\IMG20261015233201.jpg",
+  "photos/calib\\IMG20261015233203.jpg",
+  "photos/calib\\IMG20261015233204.jpg",
+  "photos/calib\\IMG20261015233206.jpg",
+  "photos/calib\\IMG20261015233211.jpg",
+  "photos/calib\\IMG20261015233214.jpg",
+  "photos/calib\\IMG20261015233217.jpg",
+  "photos/calib\\IMG20261015233220.jpg",
+  "photos/calib\\IMG20261015233223.jpg"
+ ]
+}

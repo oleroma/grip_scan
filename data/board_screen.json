@@ -1,0 +1,9 @@
+{
+ "squares_x": 13,
+ "squares_y": 9,
+ "square_mm": 29.8,
+ "marker_mm": 22.35,
+ "dictionary": 5,
+ "surface_offset_mm": 1.0,
+ "source": "screen 2560x1440, pitch 0.23281 mm/px (ruler 298.0 mm)"
+}
