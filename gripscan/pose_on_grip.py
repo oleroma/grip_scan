@@ -9,7 +9,8 @@ leave its relaxed pose, at a cost of (change / tolerance)^2 per joint, to:
 - lay the index finger on R1 (not necessarily the tip),
 - put the middle and ring fingertip pads on the R2 and R4 press centres,
 - keep the thumb over the face buttons,
-- rest the palm on the handle,
+- nest the grip's palm swell (the bump on the outer side) in the palm's central
+  crease, which the wrapping fingers press against it,
 - never sink into the grip.
 The report lists how far every joint had to move from relaxed: the joints
 the current grip forces out of the relaxed hand.
@@ -25,7 +26,8 @@ from .handmodel import ANGLE_PARAMS, OFFSETS, HandModel
 from .landmarks import FINGERS, NAMES
 from .place_hand import MeshSDF, finger_samples, load_obj, pad_point, palm_samples, transform
 
-W_R1, W_TRIG, W_THUMB, W_PALM, W_PEN, W_POSE = 3.0, 1.0, 0.7, 0.3, 2.0, 1.0
+W_R1, W_TRIG, W_THUMB, W_PALM, W_PEN, W_POSE = 3.0, 1.0, 0.3, 0.0, 2.0, 1.0
+W_SWELL = 2.0
 
 
 def main():
@@ -36,6 +38,8 @@ def main():
     p.add_argument("--init", default="data/hand_on_grip.json", help="rigid placement to start from")
     p.add_argument("--out", default="data/hand_posed_on_grip.json")
     p.add_argument("--starts", type=int, default=30)
+    p.add_argument("--swell", default=None, help="x,y,z of the palm swell apex (default: outermost "
+                   "point of the right handle)")
     a = p.parse_args()
     hand, board = json.load(open(a.hand)), json.load(open(a.board))
     sdf = MeshSDF(*load_obj(a.grip))
@@ -46,6 +50,12 @@ def main():
     offs = dict(hand["relaxed"]["offsets_mm"])
     offs.update({"wrist_dx": 0.0, "wrist_dy": 0.0, "wrist_dz": 0.0})
     names = list(ANGLE_PARAMS)
+    V, F = load_obj(a.grip)
+    if a.swell:
+        swell = np.array([float(c) for c in a.swell.split(",")])
+    else:
+        right = V[(V[:, 0] > 0) & (V[:, 2] < board["top_face"]["z"] - 10)]
+        swell = right[np.argmax(right[:, 0])]
 
     r1 = np.array(board["r1"]["target"])
     # the bumper sits in an opening below the uncut basemesh surface; the finger can only
@@ -60,6 +70,11 @@ def main():
         q.update(offs)
         return model.local(q)
 
+    def hollow(J):
+        """Centre of the palm's crease: between wrist and middle MCP, on the palm skin."""
+        c = J[0] + 0.55 * (J[9] - J[0])
+        return c + np.array([0.0, 0.0, hand["palm_thickness_mm"] / 2])
+
     def resid(v):
         x, delta = v[:6], v[6:]
         J = joints(delta)
@@ -71,6 +86,7 @@ def main():
         out += list(W_TRIG * (transform(x, pad_point(J, radii, "middle")[None])[0] - r2))
         out += list(W_TRIG * (transform(x, pad_point(J, radii, "ring")[None])[0] - r4))
         out.append(W_THUMB * max(0.0, np.linalg.norm(transform(x, J[4:5])[0] - abxy) - 15.0))
+        out += list(W_SWELL * (transform(x, hollow(J)[None])[0] - swell))
         gp = sdf(transform(x, ps))
         out += list(W_PALM * np.clip(gp, 0, None))
         out += list(W_PEN * np.minimum(0, sdf(transform(x, fs)) - fr)) + list(W_PEN * np.minimum(0, gp))
@@ -108,6 +124,7 @@ def main():
         "middle_on_R2_mm": round(float(np.linalg.norm(transform(x, pad_point(J, radii, "middle")[None])[0] - r2)), 1),
         "ring_on_R4_mm": round(float(np.linalg.norm(transform(x, pad_point(J, radii, "ring")[None])[0] - r4)), 1),
         "thumb_tip_to_abxy_centre_mm": round(float(np.linalg.norm(Jw[4] - abxy)), 1),
+        "palm_crease_to_swell_mm": round(float(np.linalg.norm(transform(x, hollow(J)[None])[0] - swell)), 1),
         "deepest_sink_mm": round(float(min(gap.min(), sdf(transform(x, ps)).min())), 1),
         "palm_gap_median_mm": round(float(np.median(sdf(transform(x, ps)))), 1),
     }
@@ -116,6 +133,7 @@ def main():
         "units": "mm, degrees",
         "fit": report,
         "change_from_relaxed_deg": change,
+        "palm_swell_point": [round(float(c), 2) for c in swell],
         "placement": {"rotvec": [float(v) for v in x[:3]], "translation": [float(v) for v in x[3:]]},
         "joints_grip_mm": {n: [round(float(c), 2) for c in Jw[i]] for i, n in enumerate(NAMES)},
     }

@@ -90,6 +90,12 @@ def main():
     rem = ho.modifiers.new("unite", "REMESH")
     rem.mode, rem.voxel_size = "VOXEL", 1.0
 
+    if placed.get("palm_swell_point"):
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=3.0, location=placed["palm_swell_point"])
+        m = bpy.context.object
+        m.name = "palm swell"
+        m.data.materials.append(material("swell", (0.2, 0.4, 1.0, 1)))
+        m.show_in_front = True
     if a.board:
         board = json.load(open(a.board))
         for key, col in (("r2", (1, 0.1, 0.1, 1)), ("r4", (0.1, 0.8, 0.2, 1))):
