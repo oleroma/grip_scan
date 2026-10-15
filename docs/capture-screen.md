@@ -68,5 +68,5 @@ photos. To run them yourself:
 
 ```bash
 .venv\Scripts\python -m gripscan.calibrate "photos\calib\*.jpg" --board-spec data\board_screen.json --out data\camera.json
-.venv\Scripts\python -m gripscan.measure_flat photos\flat\IMG_0001.jpg --camera data\camera.json --board-spec data\board_screen.json --out data\hand_flat.json --annotated out\flat_check.jpg
+.venv\Scripts\python -m gripscan.measure_flat "photos\flat\*.jpg" --camera data\camera.json --board-spec data\board_screen.json --out data\hand_flat.json --annotated-dir out\flat_check
 ```
