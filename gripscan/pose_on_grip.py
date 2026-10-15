@@ -28,6 +28,8 @@ from .place_hand import MeshSDF, finger_samples, load_obj, pad_point, palm_sampl
 
 W_R1, W_TRIG, W_THUMB, W_PALM, W_PEN, W_POSE = 3.0, 1.0, 0.3, 0.0, 2.0, 1.0
 W_SWELL = 2.0
+CREASE_FROM_WRIST = 0.40
+SQUISH_MM, SQUISH_RADIUS_MM = 6.0, 25.0
 
 
 def main():
@@ -86,9 +88,20 @@ def main():
     bounds = (np.concatenate([np.full(6, -np.inf), lo]), np.concatenate([np.full(6, np.inf), hi]))
 
     def hollow(J):
-        """Centre of the palm's crease: between wrist and middle MCP, on the palm skin."""
-        c = J[0] + 0.55 * (J[9] - J[0])
+        """Centre of the palm's crease: the middle of the palm, a little towards the
+        wrist (40% of the way from the wrist to the centre of the knuckle row), on the skin."""
+        c = J[0] + CREASE_FROM_WRIST * (J[[5, 9, 13, 17]].mean(0) - J[0])
         return c + np.array([0.0, 0.0, hand["palm_thickness_mm"] / 2])
+
+    # the palm is soft: around the crease the swell may press in up to SQUISH_MM,
+    # fading to nothing SQUISH_RADIUS_MM away; the crease itself is pressed in fully
+    _, swell_idx = sdf.tree.query(swell)
+    swell_n = sdf.N[swell_idx] / np.linalg.norm(sdf.N[swell_idx])
+    crease_target = swell - SQUISH_MM * swell_n
+
+    def palm_allowance(J, ps):
+        d = np.linalg.norm(ps - hollow(J), axis=1)
+        return SQUISH_MM * np.clip(1 - d / SQUISH_RADIUS_MM, 0, 1)
 
     def resid(v):
         x, delta = v[:6], v[6:]
@@ -101,10 +114,11 @@ def main():
         out += list(W_TRIG * (transform(x, pad_point(J, radii, "middle")[None])[0] - r2))
         out += list(W_TRIG * (transform(x, pad_point(J, radii, "ring")[None])[0] - r4))
         out.append(W_THUMB * max(0.0, np.linalg.norm(transform(x, J[4:5])[0] - abxy) - 15.0))
-        out += list(W_SWELL * (transform(x, hollow(J)[None])[0] - swell))
+        out += list(W_SWELL * (transform(x, hollow(J)[None])[0] - crease_target))
         gp = sdf(transform(x, ps))
         out += list(W_PALM * np.clip(gp, 0, None))
-        out += list(W_PEN * np.minimum(0, sdf(transform(x, fs)) - fr)) + list(W_PEN * np.minimum(0, gp))
+        out += list(W_PEN * np.minimum(0, sdf(transform(x, fs)) - fr))
+        out += list(W_PEN * np.minimum(0, gp + palm_allowance(J, ps)))
         out += [W_POSE * d / tol[n] for n, d in zip(names, delta)]
         return np.array(out)
 
@@ -138,7 +152,9 @@ def main():
         "ring_on_R4_mm": round(float(np.linalg.norm(transform(x, pad_point(J, radii, "ring")[None])[0] - r4)), 1),
         "thumb_tip_to_abxy_centre_mm": round(float(np.linalg.norm(Jw[4] - abxy)), 1),
         "palm_crease_to_swell_mm": round(float(np.linalg.norm(transform(x, hollow(J)[None])[0] - swell)), 1),
-        "deepest_sink_mm": round(float(min(gap.min(), sdf(transform(x, ps)).min())), 1),
+        "swell_pressed_into_palm_mm": round(float(-sdf(transform(x, hollow(J)[None]))[0]), 1),
+        "deepest_finger_sink_mm": round(float(gap.min()), 1),
+        "deepest_palm_sink_beyond_soft_tissue_mm": round(float(np.min(sdf(transform(x, ps)) + palm_allowance(J, ps))), 1),
         "palm_gap_median_mm": round(float(np.median(sdf(transform(x, ps)))), 1),
     }
     change = {n: round(float(np.degrees(d)), 1) for n, d in zip(names, delta)}
