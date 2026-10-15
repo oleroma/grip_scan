@@ -5,3 +5,4 @@ models/
 out/
 photos/
 data/hand_*.json
+data/hand_relaxed.json

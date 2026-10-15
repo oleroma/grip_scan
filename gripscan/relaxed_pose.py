@@ -32,6 +32,7 @@ import numpy as np
 
 from .board import BoardSpec, Camera, Pose, detect, make_board
 from .landmarks import DEFAULT_MODEL, FINGERS, MODEL_URL, NAMES, SEGMENTS
+from .handmodel import HandModel, degrees, fit, offsets
 from .triangulate import baseline_deg, normalize, projection, robust_point
 
 VIDEO_EXT = {".mp4", ".mov", ".m4v", ".avi", ".mkv", ".3gp"}
@@ -160,7 +161,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("videos", nargs="+")
     p.add_argument("--board-spec", required=True)
-    p.add_argument("--flat", default=None, help="hand_flat.json, for the length cross-check")
+    p.add_argument("--flat", required=True, help="hand_flat.json: lengths and palm layout of the model")
     p.add_argument("--fps", type=float, default=10.0)
     p.add_argument("--model", default=None)
     p.add_argument("--out", default="data/hand_relaxed.json")
@@ -168,6 +169,8 @@ def main():
     paths = [f for g in a.videos for f in (sorted(glob.glob(g)) or [g])]
     spec = BoardSpec.load(a.board_spec)
     board = make_board(spec)
+    flat_json = json.load(open(a.flat))
+    model = HandModel(flat_json["per_photo"][0]["landmarks_board_mm"])
 
     # pass 1: frames, board corners, 2D joints
     import mediapipe as mp
@@ -226,8 +229,17 @@ def main():
             resid.append(rms)
             used.append(int(keep.sum()))
             base.append(baseline_deg(poses, keep))
+        v, err, Xfit, sway = fit(model, Ps, xs, f, W[[0, 1, 5, 9, 13, 17]])
+        joint_err = np.median(err, axis=0)
         takes.append({
             "input": t["path"], "frames_used": len(Ps),
+            "model_angles_deg": degrees(v),
+            "model_offsets_mm": offsets(v),
+            "sway_mm": {"median": round(float(np.median(np.linalg.norm(sway, axis=1))), 1),
+                        "max": round(float(np.max(np.linalg.norm(sway, axis=1))), 1)},
+            "model_fit_px": {"median": round(float(np.median(err)), 1),
+                             "per_joint_median": {n: round(float(e), 1) for n, e in zip(NAMES, joint_err)}},
+            "model_landmarks_board_mm": {n: [round(float(c), 2) for c in Xfit[i]] for i, n in enumerate(NAMES)},
             "baseline_deg_min": round(min(base), 1),
             "reprojection_px": {n: round(r, 1) for n, r in zip(NAMES, resid)},
             "views_per_joint_min": min(used),
@@ -235,6 +247,8 @@ def main():
             "segments_mm": segment_lengths(W),
             "angles": angles(W),
         })
+        print(f"{os.path.basename(t['path'])}: model fit median {np.median(err):.1f}px "
+              f"(free triangulation {np.median(resid):.1f}px)")
         print(f"{os.path.basename(t['path'])}: {len(Ps)} views, widest baseline >= {min(base):.0f} deg, "
               f"reprojection median {np.median(resid):.1f}px, worst {max(resid):.1f}px ({NAMES[int(np.argmax(resid))]})")
     if not takes:
@@ -242,11 +256,15 @@ def main():
     make_curl_positive(takes)
 
     joints = {}
-    for k in takes[0]["angles"]:
-        vals = [t["angles"][k] for t in takes]
+    for k in takes[0]["model_angles_deg"]:
+        vals = [t["model_angles_deg"][k] for t in takes]
         joints[k] = {"deg": round(float(np.median(vals)), 1),
                      "range_between_takes": round(float(np.ptp(vals)), 1),
                      "per_take": [round(v, 1) for v in vals]}
+    free = {}
+    for k in takes[0]["angles"]:
+        vals = [t["angles"][k] for t in takes]
+        free[k] = {"deg": round(float(np.median(vals)), 1), "per_take": [round(v, 1) for v in vals]}
 
     check = None
     if a.flat and os.path.exists(a.flat):
@@ -260,8 +278,10 @@ def main():
 
     result = {
         "units": "degrees (angles), mm (positions)",
-        "method": "board pose per video frame + MediaPipe 2D joints, robust multi-view triangulation",
+        "method": ("board pose per video frame + MediaPipe 2D joints; articulated hand model "
+                   "(lengths and palm from the flat photos) fitted robustly to all views"),
         "joints": joints,
+        "free_triangulation_angles": free,
         "length_check_vs_flat": check,
         "takes": takes,
     }
