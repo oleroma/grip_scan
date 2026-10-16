@@ -33,6 +33,8 @@ SQUISH_MM, SQUISH_RADIUS_MM = 6.0, 25.0
 R1_SLACK_MM = 8.0
 INDEX_STIFF = 3.0
 TRIGGER_REACH_MM = 10.0
+SWELL_ON_PALM = (0.2, 0.6)  # where along wrist -> knuckles the swell may land
+W_KNUCKLE, KNUCKLE_SLACK_MM = 3.0, 5.0
 R1_OVERLAP_MM = 15.0  # the index keeps its relaxed shape more firmly than the others
 
 
@@ -107,6 +109,21 @@ def main():
         d = np.linalg.norm(ps - hollow(J), axis=1)
         return SQUISH_MM * np.clip(1 - d / SQUISH_RADIUS_MM, 0, 1)
 
+    def swell_contact(x, J):
+        """Nearest point to the swell on the palm's centre line (wrist -> knuckle-row centre,
+        between SWELL_ON_PALM fractions), on the palm skin, in grip coordinates. The swell may
+        land anywhere along that line; where the hand sits is set by the knuckle rule."""
+        lift = np.array([0.0, 0.0, hand["palm_thickness_mm"] / 2])
+        k = J[[5, 9, 13, 17]].mean(0)
+        a_ = transform(x, (J[0] + SWELL_ON_PALM[0] * (k - J[0]) + lift)[None])[0]
+        b_ = transform(x, (J[0] + SWELL_ON_PALM[1] * (k - J[0]) + lift)[None])[0]
+        t_ = np.clip((crease_target - a_) @ (b_ - a_) / ((b_ - a_) @ (b_ - a_)), 0, 1)
+        return a_ + t_ * (b_ - a_)
+
+    # where the index knuckle sits seen from above: about the Y of the B / Cross buttons
+    abxy_t = {t["name"]: t["top_centre"] for t in board["thumb_targets"]}
+    knuckle_y = 0.5 * (abxy_t["abxy cap right"][1] + abxy_t["abxy cap down"][1])
+
     def resid(v):
         x, delta = v[:6], v[6:]
         J = joints(delta)
@@ -124,14 +141,18 @@ def main():
             d_ = np.linalg.norm(transform(x, pad_point(J, radii, f_)[None])[0] - r_)
             out.append(W_TRIG * max(0.0, d_ - TRIGGER_REACH_MM))
         out.append(W_THUMB * max(0.0, np.linalg.norm(transform(x, J[4:5])[0] - abxy) - 15.0))
-        out += list(W_SWELL * (transform(x, hollow(J)[None])[0] - crease_target))
+        out += list(W_SWELL * (swell_contact(x, J) - crease_target))
+        k_y = transform(x, J[5:6])[0][1]
+        out.append(W_KNUCKLE * max(0.0, abs(k_y - knuckle_y) - KNUCKLE_SLACK_MM))
         gp = sdf(transform(x, ps))
         out += list(W_PALM * np.clip(gp, 0, None))
         # the index may overlap the bumper: no sinking cost for finger samples near R1
         fw = transform(x, fs)
         near_r1 = np.linalg.norm(fw - r1, axis=1) < R1_OVERLAP_MM
         out += list(W_PEN * np.where(near_r1, 0.0, np.minimum(0, sdf(fw) - fr)))
-        out += list(W_PEN * np.minimum(0, gp + palm_allowance(J, ps)))
+        sc_ = swell_contact(x, J)
+        allow = SQUISH_MM * np.clip(1 - np.linalg.norm(transform(x, ps) - sc_, axis=1) / SQUISH_RADIUS_MM, 0, 1)
+        out += list(W_PEN * np.minimum(0, gp + allow))
         out += [W_POSE * (INDEX_STIFF if n.startswith("index") else 1.0) * d / tol[n]
                 for n, d in zip(names, delta)]
         return np.array(out)
@@ -150,6 +171,8 @@ def main():
     x0 = np.concatenate([Rotation.from_matrix(R).as_rotvec(), cb - R @ ca])
     print("contact alignment of the relaxed hand (mm):",
           np.round(np.linalg.norm(A @ R.T + x0[3:] - B, axis=1), 1))
+    # slide the start back so the index knuckle sits at the B / Cross button Y
+    x0[4] += knuckle_y - transform(x0, J0[5:6])[0][1]
     sol = least_squares(resid, np.concatenate([x0, np.zeros(len(names))]), loss="soft_l1",
                         f_scale=3.0, max_nfev=800, bounds=bounds)
     x, delta = sol.x[:6], sol.x[6:]
@@ -165,10 +188,14 @@ def main():
         "middle_on_R2_mm": round(float(np.linalg.norm(transform(x, pad_point(J, radii, "middle")[None])[0] - r2)), 1),
         "ring_on_R4_mm": round(float(np.linalg.norm(transform(x, pad_point(J, radii, "ring")[None])[0] - r4)), 1),
         "thumb_tip_to_abxy_centre_mm": round(float(np.linalg.norm(Jw[4] - abxy)), 1),
+        "index_knuckle_y_mm": round(float(Jw[5][1]), 1),
+        "knuckle_target_y_mm": round(float(knuckle_y), 1),
+        "swell_lands_on_palm_at": round(float(np.linalg.norm(np.linalg.solve(Rotation.from_rotvec(x[:3]).as_matrix(), swell_contact(x, J) - x[3:]) - J[0]) / np.linalg.norm(J[[5, 9, 13, 17]].mean(0) - J[0])), 2),
         "palm_crease_to_swell_mm": round(float(np.linalg.norm(transform(x, hollow(J)[None])[0] - swell)), 1),
-        "swell_pressed_into_palm_mm": round(float(-sdf(transform(x, hollow(J)[None]))[0]), 1),
+        "swell_pressed_into_palm_mm": round(float(-sdf(swell_contact(x, J)[None])[0]), 1),
         "deepest_finger_sink_mm": round(float(gap.min()), 1),
-        "deepest_palm_sink_beyond_soft_tissue_mm": round(float(np.min(sdf(transform(x, ps)) + palm_allowance(J, ps))), 1),
+        "deepest_palm_sink_beyond_soft_tissue_mm": round(float(np.min(sdf(transform(x, ps)) + SQUISH_MM * np.clip(
+            1 - np.linalg.norm(transform(x, ps) - swell_contact(x, J), axis=1) / SQUISH_RADIUS_MM, 0, 1))), 1),
         "palm_gap_median_mm": round(float(np.median(sdf(transform(x, ps)))), 1),
     }
     change = {n: round(float(np.degrees(d)), 1) for n, d in zip(names, delta)}
