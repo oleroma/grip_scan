@@ -28,7 +28,7 @@ from .place_hand import MeshSDF, finger_samples, load_obj, pad_point, palm_sampl
 
 W_R1, W_TRIG, W_THUMB, W_PALM, W_PEN, W_POSE = 3.0, 1.0, 0.3, 0.0, 2.0, 1.0
 W_SWELL = 2.0
-CREASE_FROM_WRIST = 0.40
+CREASE_FROM_WRIST = 0.33
 SQUISH_MM, SQUISH_RADIUS_MM = 6.0, 25.0
 R1_SLACK_MM = 8.0
 INDEX_STIFF = 3.0  # the index keeps its relaxed shape more firmly than the others
@@ -90,8 +90,8 @@ def main():
     bounds = (np.concatenate([np.full(6, -np.inf), lo]), np.concatenate([np.full(6, np.inf), hi]))
 
     def hollow(J):
-        """Centre of the palm's crease: the middle of the palm, a little towards the
-        wrist (40% of the way from the wrist to the centre of the knuckle row), on the skin."""
+        """Where the swell nests: a third of the way from the wrist (where the palm meets the
+        arm) to the centre of the knuckle row, on the palm skin."""
         c = J[0] + CREASE_FROM_WRIST * (J[[5, 9, 13, 17]].mean(0) - J[0])
         return c + np.array([0.0, 0.0, hand["palm_thickness_mm"] / 2])
 
