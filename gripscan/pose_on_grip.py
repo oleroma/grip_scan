@@ -31,7 +31,9 @@ W_SWELL = 2.0
 CREASE_FROM_WRIST = 0.33
 SQUISH_MM, SQUISH_RADIUS_MM = 6.0, 25.0
 R1_SLACK_MM = 8.0
-INDEX_STIFF = 3.0  # the index keeps its relaxed shape more firmly than the others
+INDEX_STIFF = 3.0
+TRIGGER_REACH_MM = 10.0
+R1_OVERLAP_MM = 15.0  # the index keeps its relaxed shape more firmly than the others
 
 
 def main():
@@ -42,8 +44,8 @@ def main():
     p.add_argument("--init", default="data/hand_on_grip.json", help="rigid placement to start from")
     p.add_argument("--out", default="data/hand_posed_on_grip.json")
     p.add_argument("--starts", type=int, default=30)
-    p.add_argument("--swell", default=None, help="x,y,z of the palm swell apex (default: the right "
-                   "handle's rearmost point, most negative Y, i.e. towards the player)")
+    p.add_argument("--swell", default=None, help="x,y,z of the palm swell apex (default: the bump on "
+                   "the outer side of the right handle, its outermost point in X)")
     a = p.parse_args()
     hand, board = json.load(open(a.hand)), json.load(open(a.board))
     sdf = MeshSDF(*load_obj(a.grip))
@@ -58,8 +60,8 @@ def main():
     if a.swell:
         swell = np.array([float(c) for c in a.swell.split(",")])
     else:
-        right = V[V[:, 0] > 20]
-        swell = right[np.argmin(right[:, 1])]
+        right = V[(V[:, 0] > 0) & (V[:, 2] < board["top_face"]["z"] - 10)]
+        swell = right[np.argmax(right[:, 0])]
 
     r1 = np.array(board["r1"]["target"])
     # the bumper sits in an opening below the uncut basemesh surface; the finger can only
@@ -116,13 +118,19 @@ def main():
         # it should not hook its tip to touch it
         d_r1 = np.linalg.norm(transform(x, idx) - r1, axis=1).min() - radii["index"][0]
         out = [W_R1 * max(0.0, d_r1 - R1_SLACK_MM)]
-        out += list(W_TRIG * (transform(x, pad_point(J, radii, "middle")[None])[0] - r2))
-        out += list(W_TRIG * (transform(x, pad_point(J, radii, "ring")[None])[0] - r4))
+        # R2/R4: the fingertips need not rest on the triggers, only arrive at them:
+        # no cost within TRIGGER_REACH_MM
+        for f_, r_ in (("middle", r2), ("ring", r4)):
+            d_ = np.linalg.norm(transform(x, pad_point(J, radii, f_)[None])[0] - r_)
+            out.append(W_TRIG * max(0.0, d_ - TRIGGER_REACH_MM))
         out.append(W_THUMB * max(0.0, np.linalg.norm(transform(x, J[4:5])[0] - abxy) - 15.0))
         out += list(W_SWELL * (transform(x, hollow(J)[None])[0] - crease_target))
         gp = sdf(transform(x, ps))
         out += list(W_PALM * np.clip(gp, 0, None))
-        out += list(W_PEN * np.minimum(0, sdf(transform(x, fs)) - fr))
+        # the index may overlap the bumper: no sinking cost for finger samples near R1
+        fw = transform(x, fs)
+        near_r1 = np.linalg.norm(fw - r1, axis=1) < R1_OVERLAP_MM
+        out += list(W_PEN * np.where(near_r1, 0.0, np.minimum(0, sdf(fw) - fr)))
         out += list(W_PEN * np.minimum(0, gp + palm_allowance(J, ps)))
         out += [W_POSE * (INDEX_STIFF if n.startswith("index") else 1.0) * d / tol[n]
                 for n, d in zip(names, delta)]
