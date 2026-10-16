@@ -30,6 +30,8 @@ W_R1, W_TRIG, W_THUMB, W_PALM, W_PEN, W_POSE = 3.0, 1.0, 0.3, 0.0, 2.0, 1.0
 W_SWELL = 2.0
 CREASE_FROM_WRIST = 0.40
 SQUISH_MM, SQUISH_RADIUS_MM = 6.0, 25.0
+R1_SLACK_MM = 8.0
+INDEX_STIFF = 3.0  # the index keeps its relaxed shape more firmly than the others
 
 
 def main():
@@ -110,7 +112,10 @@ def main():
         ps = palm_samples(J, hand["palm_thickness_mm"])
         ids = FINGERS["index"]
         idx = np.array([J[ids[0]] + t * (J[ids[2]] - J[ids[0]]) for t in np.linspace(0, 1, 12)])
-        out = [W_R1 * (np.linalg.norm(transform(x, idx) - r1, axis=1).min() - radii["index"][0])]
+        # R1: the index lies on or near the bumper (within R1_SLACK_MM counts as on it),
+        # it should not hook its tip to touch it
+        d_r1 = np.linalg.norm(transform(x, idx) - r1, axis=1).min() - radii["index"][0]
+        out = [W_R1 * max(0.0, d_r1 - R1_SLACK_MM)]
         out += list(W_TRIG * (transform(x, pad_point(J, radii, "middle")[None])[0] - r2))
         out += list(W_TRIG * (transform(x, pad_point(J, radii, "ring")[None])[0] - r4))
         out.append(W_THUMB * max(0.0, np.linalg.norm(transform(x, J[4:5])[0] - abxy) - 15.0))
@@ -119,7 +124,8 @@ def main():
         out += list(W_PALM * np.clip(gp, 0, None))
         out += list(W_PEN * np.minimum(0, sdf(transform(x, fs)) - fr))
         out += list(W_PEN * np.minimum(0, gp + palm_allowance(J, ps)))
-        out += [W_POSE * d / tol[n] for n, d in zip(names, delta)]
+        out += [W_POSE * (INDEX_STIFF if n.startswith("index") else 1.0) * d / tol[n]
+                for n, d in zip(names, delta)]
         return np.array(out)
 
     # start from the placement that best matches the four contacts of a real grip
