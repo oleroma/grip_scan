@@ -31,10 +31,13 @@ W_SWELL = 2.0
 CREASE_FROM_WRIST = 0.33
 SQUISH_MM, SQUISH_RADIUS_MM = 6.0, 25.0
 R1_SLACK_MM = 8.0
+# the user's hold: the index leaves the palm in a straight line, then wraps the grip
+HOLD_OVERRIDES_DEG = {"index_mcp": 5.0}
 INDEX_STIFF = 3.0
 TRIGGER_REACH_MM = 10.0
 SWELL_ON_PALM = (0.2, 0.6)  # where along wrist -> knuckles the swell may land
 W_KNUCKLE, KNUCKLE_SLACK_MM = 3.0, 5.0
+KNUCKLE_ABOVE_TOP_MM = 5.0  # joint centre; the skin of the knuckle is then just above the top
 R1_OVERLAP_MM = 15.0  # the index keeps its relaxed shape more firmly than the others
 
 
@@ -54,6 +57,9 @@ def main():
     model = HandModel(hand["template_palm_mm"])
     radii = hand["radii_mm"]
     relaxed = {n: np.radians(v) for n, v in hand["relaxed"]["angles_deg"].items()}
+    # holding-posture targets that differ from the measured relaxed hand (degrees)
+    for n, v in HOLD_OVERRIDES_DEG.items():
+        relaxed[n] = np.radians(v)
     tol = {n: np.radians(max(8.0, v)) for n, v in hand["relaxed"]["tolerance_deg"].items()}
     offs = dict(hand["relaxed"]["offsets_mm"])
     offs.update({"wrist_dx": 0.0, "wrist_dy": 0.0, "wrist_dz": 0.0})
@@ -123,6 +129,7 @@ def main():
     # where the index knuckle sits seen from above: about the Y of the B / Cross buttons
     abxy_t = {t["name"]: t["top_centre"] for t in board["thumb_targets"]}
     knuckle_y = 0.5 * (abxy_t["abxy cap right"][1] + abxy_t["abxy cap down"][1])
+    knuckle_z = board["top_face"]["z"] + KNUCKLE_ABOVE_TOP_MM
 
     def resid(v):
         x, delta = v[:6], v[6:]
@@ -144,6 +151,9 @@ def main():
         out += list(W_SWELL * (swell_contact(x, J) - crease_target))
         k_y = transform(x, J[5:6])[0][1]
         out.append(W_KNUCKLE * max(0.0, abs(k_y - knuckle_y) - KNUCKLE_SLACK_MM))
+        # ... and its height: the knuckle slightly above the top face
+        k_z = transform(x, J[5:6])[0][2]
+        out.append(W_KNUCKLE * max(0.0, abs(k_z - knuckle_z) - KNUCKLE_SLACK_MM))
         gp = sdf(transform(x, ps))
         out += list(W_PALM * np.clip(gp, 0, None))
         # the index may overlap the bumper: no sinking cost for finger samples near R1
@@ -173,6 +183,7 @@ def main():
           np.round(np.linalg.norm(A @ R.T + x0[3:] - B, axis=1), 1))
     # slide the start back so the index knuckle sits at the B / Cross button Y
     x0[4] += knuckle_y - transform(x0, J0[5:6])[0][1]
+    x0[5] += knuckle_z - transform(x0, J0[5:6])[0][2]
     sol = least_squares(resid, np.concatenate([x0, np.zeros(len(names))]), loss="soft_l1",
                         f_scale=3.0, max_nfev=800, bounds=bounds)
     x, delta = sol.x[:6], sol.x[6:]
@@ -190,6 +201,8 @@ def main():
         "thumb_tip_to_abxy_centre_mm": round(float(np.linalg.norm(Jw[4] - abxy)), 1),
         "index_knuckle_y_mm": round(float(Jw[5][1]), 1),
         "knuckle_target_y_mm": round(float(knuckle_y), 1),
+        "index_knuckle_z_mm": round(float(Jw[5][2]), 1),
+        "knuckle_target_z_mm": round(float(knuckle_z), 1),
         "swell_lands_on_palm_at": round(float(np.linalg.norm(np.linalg.solve(Rotation.from_rotvec(x[:3]).as_matrix(), swell_contact(x, J) - x[3:]) - J[0]) / np.linalg.norm(J[[5, 9, 13, 17]].mean(0) - J[0])), 2),
         "palm_crease_to_swell_mm": round(float(np.linalg.norm(transform(x, hollow(J)[None])[0] - swell)), 1),
         "swell_pressed_into_palm_mm": round(float(-sdf(swell_contact(x, J)[None])[0]), 1),
