@@ -111,13 +111,22 @@ def main():
     palm.head, palm.tail = J["wrist"], knuckles
     palm_normal = (J["middle_mcp"] - J["wrist"]).cross(J["index_mcp"] - J["pinky_mcp"]).normalized()
     palm.align_roll(palm_normal)
+    # metacarpals: the palm arches (ring and pinky fold towards the palm, index and middle
+    # a little), so every finger hangs off its own metacarpal bone rooted at the wrist
+    metas = {}
+    for f in ("index", "middle", "ring", "pinky"):
+        m = eb.new(f"{f}_metacarpal")
+        m.head, m.tail = J["wrist"], J[f + "_mcp"]
+        m.parent = palm
+        m.align_roll(palm_normal)
+        metas[f] = m
     for f, ids in FINGERS.items():
-        parent = palm
+        parent = metas.get(f, palm)
         for s in range(3):
             b = eb.new(f"{f}_{(SEG.get(f, SEG_DEFAULT))[s]}")
             b.head, b.tail = J[NAMES[ids[s]]], J[NAMES[ids[s + 1]]]
             b.parent = parent
-            b.use_connect = s > 0
+            b.use_connect = s > 0 or f in metas
             b.align_roll(palm_normal)
             parent = b
     bpy.ops.object.mode_set(mode="OBJECT")
@@ -137,20 +146,20 @@ def main():
             o.data.materials.append(skin)
             o.hide_select = True
             parent_to_bone(o, arm, bn)
-    # palm block
-    me = bpy.data.meshes.new("palm")
-    bm = bmesh.new()
+    # palm skin: a thick capsule along every metacarpal, so the palm follows the arch
     t = hand["palm_thickness_mm"] / 2
-    pts = [J[n] for n in ("wrist", "thumb_cmc", "index_mcp", "middle_mcp", "ring_mcp", "pinky_mcp")]
-    verts = [bm.verts.new(p + s * t * palm_normal) for p in pts for s in (-1, 1)]
-    bmesh.ops.convex_hull(bm, input=verts)
-    bm.to_mesh(me)
-    bm.free()
-    po = bpy.data.objects.new("palm skin", me)
-    sc.collection.objects.link(po)
-    po.data.materials.append(skin)
-    po.hide_select = True
-    parent_to_bone(po, arm, "palm")
+    for f in ("index", "middle", "ring", "pinky"):
+        a_ = J["wrist"] + 0.25 * (J[f + "_mcp"] - J["wrist"])
+        o = bpy.data.objects.new(f"{f}_metacarpal skin", capsule_mesh(f + "_meta", a_, J[f + "_mcp"], t))
+        sc.collection.objects.link(o)
+        o.data.materials.append(skin)
+        o.hide_select = True
+        parent_to_bone(o, arm, f"{f}_metacarpal")
+    o = bpy.data.objects.new("palm heel skin", capsule_mesh("heel", J["wrist"], J["thumb_cmc"], t))
+    sc.collection.objects.link(o)
+    o.data.materials.append(skin)
+    o.hide_select = True
+    parent_to_bone(o, arm, "palm")
 
     arm["grip_scan"] = json.dumps({"names": NAMES, "fingers": FINGERS})
     bpy.context.view_layer.objects.active = arm
