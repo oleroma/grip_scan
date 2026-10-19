@@ -13,13 +13,23 @@ The procedure follows Olex's description (2026-10-18):
   3. Middle and ring fingers curl until their fingertip pads sit on the
      R2/R4 centres, with the distal joint relaxed (`dip_release_deg`).
   4. The case walls under the proximal and middle phalanges of middle and
-     ring move until those phalanges just touch the case (`finger_press_mm`).
+     ring move until those phalanges just touch the case (`finger_press_mm`):
+     the middle phalanges grab the front of the handle next to their PIP
+     joint (`pip_pad_frac`) and press it into the pads at the finger roots,
+     next to the knuckles (`root_pad_frac`). Elsewhere they may only clear.
   5. The pinky has no button: it is turned so it curls in the same plane
      as the ring finger (wrapping the side of the handle, not its bottom)
      and changes its knuckle and middle-joint curl by as much as the ring
      finger did (plus `pinky_extra_curl_deg`); its fingertip keeps its
      grabbing bend. The case walls under all three pinky phalanges then
      move until they touch.
+  6. The palm cups: the ring and pinky metacarpals flex towards the palm
+     (`palm_cup_deg`), deepening the knuckle arch into a cup around the
+     palm swell.
+  7. The back edge of the top face moves forward (towards the sticks) so
+     the thenar rests on a smooth slope, but the case never comes closer
+     than `stick_clearance_mm` to the stick and home button cutouts
+     (collection "stick cutouts", baked from Grip.blend).
 
 Everything the solver moves is a bone of the "case rig" armature, so the
 case can also be adjusted by hand afterwards.
@@ -51,7 +61,13 @@ DEFAULTS = {
     "button_keep_mm": 9.0,      # case within this distance of R2/R4 centres stays put
     "pinky_extra_curl_deg": 0.0,  # pinky curls this much more (+) or less (-) than its posed curl
     "min_thickness_mm": 10.0,   # walls may not push the handle thinner than this
+    "root_pad_frac": 0.35,      # proximal phalanges touch over this part next to the knuckle
+    "pip_pad_frac": 0.4,        # middle phalanges touch over this part next to the PIP joint
+    "palm_cup_deg": 10.0,       # pinky metacarpal flexes this much towards the palm (ring half)
+    "top_back_max_mm": 30.0,    # top face back edge may move forward up to this far
+    "stick_clearance_mm": 0.8,  # case stays at least this far from the stick/home cutouts
 }
+CUTOUTS = "stick cutouts"
 
 
 # ---------------------------------------------------------------- helpers
@@ -146,6 +162,24 @@ class Hand:
         pn = np.linalg.svd(P - P.mean(0))[2][2]
         self.palm_normal = pn if pn[0] < 0 else -pn
 
+    def cup(self, ang):
+        """Flex the ring and pinky metacarpals towards the palm (ring half as much),
+        so the knuckle arch deepens into a cup. Their fingers move along."""
+        for f, k in (("ring", 0.5), ("pinky", 1.0)):
+            F = self.f[f]
+            c = self.head[f + "_metacarpal"]
+            meta = F["mcp"] - c
+            R = rot(np.cross(meta / np.linalg.norm(meta), self.palm_normal), k * ang)
+            F["mcp"] = c + R @ meta
+            F["d"] = [R @ v for v in F["d"]]
+            F["n"] = R @ F["n"]
+            self.tail[f + "_metacarpal"] = F["mcp"]
+
+    def knuckle_arch(self):
+        """How far each knuckle sits towards the palm side, relative to the middle knuckle (mm)."""
+        m = self.f["middle"]["mcp"]
+        return {f: round(float(np.dot(self.f[f]["mcp"] - m, self.palm_normal)), 1) for f in FINGERS}
+
     @staticmethod
     def _skin_radius(skin, bone):
         dg = bpy.context.evaluated_depsgraph_get()
@@ -219,6 +253,49 @@ class Case:
         ev.to_mesh_clear()
         return best
 
+    def side_bvh(self):
+        """BVH of the case surface without its flat top face (the cutouts pass through that)."""
+        dg = bpy.context.evaluated_depsgraph_get()
+        ev = self.obj.evaluated_get(dg)
+        me = ev.to_mesh()
+        me.calc_loop_triangles()
+        V = [tuple(v.co) for v in me.vertices]
+        T = [tuple(t.vertices) for t in me.loop_triangles if min(V[i][2] for i in t.vertices) < 58.95]
+        ev.to_mesh_clear()
+        return BVHTree.FromPolygons(V, T)
+
+    @staticmethod
+    def cutout_samples(step=0.7):
+        """Points on the stick/home cutout surfaces (inside the case, Z <= 59)."""
+        col = bpy.data.collections.get(CUTOUTS)
+        pts, names = [], []
+        for o in (col.objects if col else []):
+            if o.type != "MESH":
+                continue
+            me = o.data
+            me.calc_loop_triangles()
+            mw = np.array(o.matrix_world)
+            V = np.array([(mw @ np.array([*v.co, 1.0]))[:3] for v in me.vertices])
+            for tri in me.loop_triangles:
+                a, b, c = V[list(tri.vertices)]
+                k = max(2, int(max(np.linalg.norm(b - a), np.linalg.norm(c - a), np.linalg.norm(c - b)) / step))
+                for i in range(k + 1):
+                    for j in range(k + 1 - i):
+                        p = a + (b - a) * i / k + (c - a) * j / k
+                        if p[2] <= 59.0:
+                            pts.append(p)
+                            names.append(o.name)
+        return np.array(pts), names
+
+    @staticmethod
+    def clearance(bvh, pts, names):
+        best = (1e9, None)
+        for p, n in zip(pts, names):
+            d = bvh.find_nearest(Vector(p))[3]
+            if d is not None and d < best[0]:
+                best = (d, n)
+        return best
+
     def segment_gap(self, bvh, a, b, r, samples=13):
         best = (1e9, None, None, None)
         for t in np.linspace(0, 1, samples):
@@ -231,7 +308,16 @@ class Case:
 
 # ---------------------------------------------------------------- case rig
 HANDLES = ["bump", "middle_proximal", "middle_middle", "ring_proximal", "ring_middle",
-           "pinky_proximal", "pinky_middle", "pinky_distal"]
+           "pinky_proximal", "pinky_middle", "pinky_distal", "top_back"]
+
+
+def top_back_weights(co):
+    """Back edge of the top face (full), fading down the back of the shoulder; the
+    outer side and everything in front of the sticks stay put."""
+    wz = np.interp(co[:, 2], [38.0, 47.0, 56.0, 58.1, 59.0], [0.0, 0.15, 0.45, 0.75, 1.0])
+    wy = 1.0 - smoothstep(-62.0, -54.0, co[:, 1])
+    wx = 1.0 - smoothstep(50.0, 70.0, co[:, 0])
+    return wz * wy * wx
 
 
 def ensure_case_rig(case_obj):
@@ -280,7 +366,7 @@ def build_handles(rig, case_obj, centers, normals, params, button_pts):
         pb.lock_rotation = (True, True, True)
         pb.lock_scale = (True, True, True)
         pb.rotation_mode = "XYZ"
-        if pb.name.startswith(("middle", "ring", "pinky")):
+        if pb.name.startswith(("middle", "ring", "pinky")) or pb.name == "top_back":
             pb.lock_location = (True, False, True)  # slide along the wall normal only
     # weights on the cage (half mesh, X >= 0)
     co = np.array([v.co for v in case_obj.data.vertices])
@@ -290,6 +376,9 @@ def build_handles(rig, case_obj, centers, normals, params, button_pts):
         mask *= smoothstep(params["button_keep_mm"], params["button_keep_mm"] + 8.0, dist)
     W = {}
     for name in HANDLES:
+        if name == "top_back":
+            W[name] = top_back_weights(co)
+            continue
         sig = params["bump_sigma_mm"] if name == "bump" else params["wall_sigma_mm"]
         dist = np.linalg.norm(co - np.array(centers[name]), axis=1)
         w = np.exp(-0.5 * (dist / sig) ** 2) * mask
@@ -377,6 +466,9 @@ def solve(params=None, build=True, log=print):
     R4 = np.array(bpy.data.objects["R4 press"].location)
     swell = np.array(bpy.data.objects["palm swell"].location)
     rep = {"params": P}
+    arch0 = hand.knuckle_arch()
+    hand.cup(math.radians(P["palm_cup_deg"]))
+    rep["knuckle_arch_mm"] = {"before": arch0, "after": hand.knuckle_arch()}
 
     # surface points + normals of the targets on the undeformed case
     def surf(p):
@@ -507,26 +599,43 @@ def solve(params=None, build=True, log=print):
                                                             hand.f["ring"]["r"][j]) for i in range(3) for j in range(3)), 1),
                     "lowest_z": round(float(min(p[2] for p in p_pts)) - Fp["r"][2], 1)}
 
-    # ---- 4: case walls under proximal + middle phalanges (all three for the pinky)
+    # ---- 4: case walls. Each wall touches over its contact zone: the finger-root pads (palm over
+    # the knuckle and the base of the proximal phalanx), the middle phalanx next to its PIP joint,
+    # the pinky's fingertip all along. Everywhere else the hand may only clear the case.
     centers = {"bump": swell}
     normals = {"bump": np.array([1.0, 0.0, 0.0])}
     segs = {}
+
+    def zone_gap(bvh, caps):
+        return min((case.segment_gap(bvh, a, b, r) for a, b, r in caps), key=lambda g: g[0])
+
     for f in ("middle", "ring", "pinky"):
         flex, ab = angles[f]
         pts, dirs, _ = hand.chain(f, t, flex, ab)
+        mcp, wrist = pts[0], hand.head[f + "_metacarpal"] + t
+        r_meta = hand.radius[f + "_metacarpal"]
         for kk, s in enumerate(SEGS if f == "pinky" else SEGS[:2]):
-            g, loc, nor, p = case.segment_gap(bvh0, pts[kk], pts[kk + 1], hand.f[f]["r"][kk])
-            if f == "pinky":
-                # the pinky wraps the narrow bottom of the handle, where the nearest points of
-                # its phalanges bunch up on one corner; anchor under the phalanx middles instead
-                _, loc, nor = case.sd(bvh0, 0.5 * (pts[kk] + pts[kk + 1]))
+            a, b, r = pts[kk], pts[kk + 1], hand.f[f]["r"][kk]
+            if kk == 0:
+                zone = [(mcp, mcp + 0.2 * (wrist - mcp), r_meta), (a, a + P["root_pad_frac"] * (b - a), r)]
+                full = [(a, b, r), (mcp, mcp + 0.4 * (wrist - mcp), r_meta)]
+            elif kk == 1:
+                zone = [(a, a + P["pip_pad_frac"] * (b - a), r)]
+                full = [(a, b, r)]
+            else:
+                zone = full = [(a, b, r)]
+            g, loc, nor, p = zone_gap(bvh0, zone)
             centers[f"{f}_{s}"] = loc
             normals[f"{f}_{s}"] = nor
-            segs[f"{f}_{s}"] = (pts[kk], pts[kk + 1], hand.f[f]["r"][kk], g)
-    if build or not (rig.pose and len(rig.pose.bones)):
+            segs[f"{f}_{s}"] = (zone, full, g)
+    top = case_obj.data.vertices
+    y_top = min(v.co.y for v in top if v.co.z > 58.9)
+    centers["top_back"] = np.array([30.0, y_top, 59.0])
+    normals["top_back"] = np.array([0.0, 1.0, 0.0])
+    if build or not (rig.pose and len(rig.pose.bones)) or "top_back" not in rig.pose.bones:
         build_handles(rig, case_obj, centers, normals, P, [r2_loc, r4_loc])
-    walls = [n for n in HANDLES if n != "bump"]
-    rep["walls_before_mm"] = {n: round(float(segs[n][3]), 1) for n in walls}
+    walls = [n for n in HANDLES if n not in ("bump", "top_back")]
+    rep["walls_before_mm"] = {n: round(float(segs[n][2]), 1) for n in walls}
 
     thick0 = case.min_thickness(bvh0, P["fixed_above_z"])[0]
     t_min = min(P["min_thickness_mm"], thick0)
@@ -534,22 +643,57 @@ def solve(params=None, build=True, log=print):
     def wall_res(x):
         set_handles(rig, t, dict(zip(walls, x)))
         bvh = case.bvh()
-        res = [case.segment_gap(bvh, a, b, r)[0] + P["finger_press_mm"] for (a, b, r, _) in
-               (segs[n] for n in walls)]
+        res = []
+        for n in walls:
+            zone, full, _ = segs[n]
+            res.append(zone_gap(bvh, zone)[0] + P["finger_press_mm"])                       # touch in the zone
+            res.append(2.0 * min(0.0, zone_gap(bvh, full)[0] + P["finger_press_mm"]))       # no digging
         res.append(4.0 * min(0.0, case.min_thickness(bvh, P["fixed_above_z"])[0] - t_min))
         res += list(0.1 * np.asarray(x))                   # smallest moves that do the job
         return np.array(res)
 
-    x0 = np.array([segs[n][3] for n in walls])
+    x0 = np.array([segs[n][2] for n in walls])
     x, r = lm_solve(wall_res, x0, [0.5] * len(walls), iters=15)
-    set_handles(rig, t, dict(zip(walls, x)))
+    wall_off = dict(zip(walls, x))
+    set_handles(rig, t, wall_off)
     bvh1 = case.bvh()
     thk, thk_at = case.min_thickness(bvh1, P["fixed_above_z"])
     rep["min_thickness_mm"] = {"before": round(float(thick0), 1), "after": round(float(thk), 1),
                                "at": [round(float(c)) for c in thk_at]}
     rep["wall_moves_mm"] = {n: round(float(v), 1) for n, v in zip(walls, x)}
-    rep["walls_after_mm"] = {n: round(float(case.segment_gap(bvh1, a, b, rr)[0]), 1)
-                             for n, (a, b, rr, _) in segs.items()}
+    rep["palm_on_swell_mm"] = round(float(min(
+        case.segment_gap(bvh1, hand.f[f]["mcp"] + t, hand.head[f + "_metacarpal"] + t,
+                         hand.radius[f + "_metacarpal"])[0] for f in ("middle", "ring", "pinky"))), 1)
+    rep["walls_after_mm"] = {n: {"contact_zone": round(float(zone_gap(bvh1, zone)[0]), 1),
+                                 "anywhere": round(float(zone_gap(bvh1, full)[0]), 1)}
+                             for n, (zone, full, _) in segs.items()}
+
+    # ---- 7: top face back edge forward, as far as the stick cutouts allow
+    pts_c, names_c = case.cutout_samples()
+    if len(pts_c) and P["top_back_max_mm"] > 0:
+        def clear_at(m):
+            set_handles(rig, t, {**wall_off, "top_back": m})
+            return case.clearance(case.side_bvh(), pts_c, names_c)
+
+        c0 = clear_at(0.0)
+        lo, hi = 0.0, float(P["top_back_max_mm"])
+        if clear_at(hi)[0] >= P["stick_clearance_mm"]:
+            lo = hi
+        elif c0[0] > P["stick_clearance_mm"]:
+            for _ in range(14):
+                mid = 0.5 * (lo + hi)
+                if clear_at(mid)[0] >= P["stick_clearance_mm"]:
+                    lo = mid
+                else:
+                    hi = mid
+        c1 = clear_at(lo)
+        wall_off["top_back"] = lo
+        rep["top_back"] = {"moved_forward_mm": round(lo, 1), "clearance_before_mm": round(c0[0], 2),
+                           "clearance_mm": round(c1[0], 2), "closest_cutout": c1[1]}
+    else:
+        rep["top_back"] = {"moved_forward_mm": 0.0, "note": f"no '{CUTOUTS}' collection" if not len(pts_c) else "off"}
+    set_handles(rig, t, wall_off)
+    bvh1 = case.bvh()
     # distal phalanges should stay free (released)
     for f in ("middle", "ring"):
         flex, ab = angles[f]
@@ -566,7 +710,8 @@ def solve(params=None, build=True, log=print):
     put_marker("palm pocket (solved)", pocket, 3.0)
     rep["summary"] = (f"R1 overlap {P['r1_overlap_mm']:.0f} mm from index tip -> hand shift Y {ty:+.1f} mm, "
                       f"Z {tz:+.1f} mm; bump at Y {pocket[1]:.1f} ({pocket[1] - r1_loc[1]:.1f} mm from R1); "
-                      "walls " + ", ".join(f"{n} {v:+.1f}" for n, v in rep["wall_moves_mm"].items()))
+                      "walls " + ", ".join(f"{n} {v:+.1f}" for n, v in rep["wall_moves_mm"].items()) +
+                      f"; top face back edge +{rep['top_back']['moved_forward_mm']:.1f} mm")
     txt = bpy.data.texts.get("case_rig_report") or bpy.data.texts.new("case_rig_report")
     txt.from_string(json.dumps(rep, indent=1))
     log(rep["summary"])
