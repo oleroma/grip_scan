@@ -14,7 +14,9 @@ The procedure follows Olex's description (2026-10-18):
      R2/R4 centres, with the distal joint relaxed (`dip_release_deg`).
   4. The case walls under the proximal and middle phalanges of middle and
      ring move until those phalanges just touch the case (`finger_press_mm`).
-  5. The pinky curls until it touches the case (reported only).
+  5. The pinky has no button: it follows the ring finger's curl (plus
+     `pinky_extra_curl_deg`) and wraps the case. The case walls under all
+     three pinky phalanges move until they touch.
 
 Everything the solver moves is a bone of the "case rig" armature, so the
 case can also be adjusted by hand afterwards.
@@ -44,6 +46,8 @@ DEFAULTS = {
     "wall_sigma_mm": 12.0,      # reach of each finger-wall handle
     "bump_sigma_mm": 16.0,      # reach of the palm bump handle
     "button_keep_mm": 9.0,      # case within this distance of R2/R4 centres stays put
+    "pinky_extra_curl_deg": 0.0,  # pinky curls this much more (+) or less (-) than the ring finger
+    "min_thickness_mm": 10.0,   # walls may not push the handle thinner than this
 }
 
 
@@ -197,6 +201,21 @@ class Case:
         loc, nor = np.array(loc), np.array(nor)
         return (d if np.dot(p - loc, nor) >= 0 else -d), loc, nor
 
+    def min_thickness(self, bvh, below_z, min_x=30.0):
+        """Thinnest point of the handle: ray from each surface point straight inwards."""
+        dg = bpy.context.evaluated_depsgraph_get()
+        ev = self.obj.evaluated_get(dg)
+        me = ev.to_mesh()
+        best = (1e9, None)
+        for v in me.vertices:
+            if v.co.x < min_x or v.co.z > below_z:
+                continue
+            hit = bvh.ray_cast(v.co - v.normal * 0.05, -v.normal)
+            if hit[0] is not None and hit[3] + 0.05 < best[0]:
+                best = (hit[3] + 0.05, np.array(v.co))
+        ev.to_mesh_clear()
+        return best
+
     def segment_gap(self, bvh, a, b, r, samples=13):
         best = (1e9, None, None, None)
         for t in np.linspace(0, 1, samples):
@@ -208,7 +227,8 @@ class Case:
 
 
 # ---------------------------------------------------------------- case rig
-HANDLES = ["bump", "middle_proximal", "middle_middle", "ring_proximal", "ring_middle"]
+HANDLES = ["bump", "middle_proximal", "middle_middle", "ring_proximal", "ring_middle",
+           "pinky_proximal", "pinky_middle", "pinky_distal"]
 
 
 def ensure_case_rig(case_obj):
@@ -257,7 +277,7 @@ def build_handles(rig, case_obj, centers, normals, params, button_pts):
         pb.lock_rotation = (True, True, True)
         pb.lock_scale = (True, True, True)
         pb.rotation_mode = "XYZ"
-        if pb.name.startswith(("middle", "ring")):
+        if pb.name.startswith(("middle", "ring", "pinky")):
             pb.lock_location = (True, False, True)  # slide along the wall normal only
     # weights on the cage (half mesh, X >= 0)
     co = np.array([v.co for v in case_obj.data.vertices])
@@ -449,14 +469,23 @@ def solve(params=None, build=True, log=print):
             "distal_vs_button_deg": round(float(90 - np.degrees(np.arccos(abs(np.dot(dirs[2], nor))))), 1),
         }
 
-    # ---- 4: case walls under proximal + middle phalanges
+    # ---- 5 (posed before the walls): pinky follows the ring finger's curl
+    Fp = hand.f["pinky"]
+    ring_delta = np.array(angles["ring"][0]) - np.array(hand.f["ring"]["ang"])
+    extra = math.radians(P["pinky_extra_curl_deg"])
+    flex_p = np.array(Fp["ang"]) + np.array([ring_delta[0], ring_delta[1], 0.0]) + extra * np.array([0.6, 1.0, 0.7])
+    angles["pinky"] = (list(flex_p), 0.0)
+    rep["pinky"] = {"flex_deg": [round(float(v), 1) for v in np.degrees(flex_p)],
+                    "ref_flex_deg": [round(float(v), 1) for v in np.degrees(Fp["ang"])]}
+
+    # ---- 4: case walls under proximal + middle phalanges (all three for the pinky)
     centers = {"bump": swell}
     normals = {"bump": np.array([1.0, 0.0, 0.0])}
     segs = {}
-    for f in ("middle", "ring"):
+    for f in ("middle", "ring", "pinky"):
         flex, ab = angles[f]
         pts, dirs, _ = hand.chain(f, t, flex, ab)
-        for kk, s in ((0, "proximal"), (1, "middle")):
+        for kk, s in enumerate(SEGS if f == "pinky" else SEGS[:2]):
             g, loc, nor, p = case.segment_gap(bvh0, pts[kk], pts[kk + 1], hand.f[f]["r"][kk])
             centers[f"{f}_{s}"] = loc
             normals[f"{f}_{s}"] = nor
@@ -466,16 +495,24 @@ def solve(params=None, build=True, log=print):
     walls = [n for n in HANDLES if n != "bump"]
     rep["walls_before_mm"] = {n: round(float(segs[n][3]), 1) for n in walls}
 
+    thick0 = case.min_thickness(bvh0, P["fixed_above_z"])[0]
+    t_min = min(P["min_thickness_mm"], thick0)
+
     def wall_res(x):
         set_handles(rig, t, dict(zip(walls, x)))
         bvh = case.bvh()
-        return np.array([case.segment_gap(bvh, a, b, r)[0] + P["finger_press_mm"] for (a, b, r, _) in
-                         (segs[n] for n in walls)])
+        res = [case.segment_gap(bvh, a, b, r)[0] + P["finger_press_mm"] for (a, b, r, _) in
+               (segs[n] for n in walls)]
+        res.append(4.0 * min(0.0, case.min_thickness(bvh, P["fixed_above_z"])[0] - t_min))
+        return np.array(res)
 
     x0 = np.array([segs[n][3] for n in walls])
-    x, r = lm_solve(wall_res, x0, [0.5] * 4, iters=15)
+    x, r = lm_solve(wall_res, x0, [0.5] * len(walls), iters=15)
     set_handles(rig, t, dict(zip(walls, x)))
     bvh1 = case.bvh()
+    thk, thk_at = case.min_thickness(bvh1, P["fixed_above_z"])
+    rep["min_thickness_mm"] = {"before": round(float(thick0), 1), "after": round(float(thk), 1),
+                               "at": [round(float(c)) for c in thk_at]}
     rep["wall_moves_mm"] = {n: round(float(v), 1) for n, v in zip(walls, x)}
     rep["walls_after_mm"] = {n: round(float(case.segment_gap(bvh1, a, b, rr)[0]), 1)
                              for n, (a, b, rr, _) in segs.items()}
@@ -488,31 +525,6 @@ def solve(params=None, build=True, log=print):
     # buttons stayed put?
     rep["button_shift_mm"] = {n: round(float(abs(case.sd(bvh1, p)[0] - case.sd(bvh0, p)[0])), 2)
                               for n, p in (("R1", R1), ("R2", R2), ("R4", R4))}
-
-    # ---- 5: pinky curls until it touches
-    Fp = hand.f["pinky"]
-    base = np.array(Fp["ang"])
-    curl_dir = np.array([0.6, 1.0, 0.7])
-
-    def pinky_gap(c):
-        flex = base + c * curl_dir
-        pts, _, _ = hand.chain("pinky", t, flex)
-        return min(case.segment_gap(bvh1, pts[i], pts[i + 1], Fp["r"][i], 9)[0] for i in range(3))
-
-    lo, hi = math.radians(-60), math.radians(40)
-    if pinky_gap(lo) > 0 and pinky_gap(hi) < 0:
-        for _ in range(30):
-            mid = 0.5 * (lo + hi)
-            if pinky_gap(mid) > 0:
-                lo = mid
-            else:
-                hi = mid
-        c = lo
-    else:
-        c = 0.0
-    angles["pinky"] = (list(base + c * curl_dir), 0.0)
-    rep["pinky"] = {"flex_deg": [round(float(v), 1) for v in np.degrees(base + c * curl_dir)],
-                    "ref_flex_deg": [round(float(v), 1) for v in np.degrees(base)]}
 
     pose_hand(hand, t, angles)
     # markers

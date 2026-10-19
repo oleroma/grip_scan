@@ -6,13 +6,18 @@ What is in this file
   the pose you see is what the solver computed.
 - "basemesh GripV": the GripV case cage from Grip.blend with an extra
   Armature modifier at the top of the stack ("case rig").
-- "case rig": 5 handles that reshape the case (grab them in Pose Mode):
+- "case rig": 8 handles that reshape the case (grab them in Pose Mode):
     bump              palm bump; moves with your palm pocket (G to move)
     middle_proximal   wall under the middle finger, proximal phalanx
     middle_middle     wall under the middle finger, middle phalanx
     ring_proximal     wall under the ring finger, proximal phalanx
     ring_middle       wall under the ring finger, middle phalanx
-  The 4 wall handles only slide along their local Y (the wall normal).
+    pinky_proximal    wall under the pinky, proximal phalanx
+    pinky_middle      wall under the pinky, middle phalanx
+    pinky_distal      wall under the pinky, fingertip
+  The wall handles only slide along their local Y (the wall normal).
+  The pinky has no button: it follows the ring finger's curl and wraps
+  the case; its walls move until all three phalanges touch.
   Everything above Z 38 (top part, index wrap) and the R2/R4 button
   areas never move.
 - "fitted variants" collection (hidden): ready cages for 4 R1 overlaps.
@@ -36,3 +41,6 @@ Settings
   fixed_above_z / free_below_z   frozen zone of the case
   wall_sigma_mm / bump_sigma_mm  how wide each handle's influence is
   button_keep_mm   radius kept fixed around R2/R4
+  pinky_extra_curl_deg  pinky curls this much more (+) or less (-) than
+                   the ring finger
+  min_thickness_mm walls may not make the handle thinner than this
