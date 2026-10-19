@@ -16,8 +16,10 @@ What is in this file
     pinky_middle      wall under the pinky, middle phalanx
     pinky_distal      wall under the pinky, fingertip
   The wall handles only slide along their local Y (the wall normal).
-  The pinky has no button: it follows the ring finger's curl and wraps
-  the case; its walls move until all three phalanges touch.
+  The pinky has no button. It is turned to curl right beside the ring
+  finger (same plane, so it wraps the handle instead of passing under
+  it) and keeps your posed pinky curl, changed by as much as the ring
+  finger's curl changed. Its walls move until all three phalanges touch.
   Everything above Z 38 (top part, index wrap) and the R2/R4 button
   areas never move.
 - "fitted variants" collection (hidden): ready cages for 4 R1 overlaps.
@@ -42,5 +44,5 @@ Settings
   wall_sigma_mm / bump_sigma_mm  how wide each handle's influence is
   button_keep_mm   radius kept fixed around R2/R4
   pinky_extra_curl_deg  pinky curls this much more (+) or less (-) than
-                   the ring finger
+                   your posed pinky curl; the case follows it
   min_thickness_mm walls may not make the handle thinner than this
