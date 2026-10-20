@@ -1,0 +1,1298 @@
+{
+ "_about": "Shared problem data for the smooth-shape prototypes (see PROBLEM.md). Units mm, Blender scene coordinates. Made by make_targets.py from base.blend and the no-fit run /tmp/claude-0/sdf/smooth/baseline/nofit",
+ "made": "2026-10-19 23:57",
+ "seconds": 2.2,
+ "blend": "/tmp/claude-0/sdf/smooth/base.blend",
+ "settings": {
+  "variant": "GripV",
+  "subdivision level": "high",
+  "voxel resolution": "low"
+ },
+ "constants": {
+  "press_mm": 0.5,
+  "penetration_accept_mm": [
+   0.2,
+   1.0
+  ],
+  "penetration_target_mm": 0.5,
+  "support_within_mm": 1.5,
+  "max_dig_mm": 1.0,
+  "seat_skin_under_face_mm": 0.2,
+  "seat_radius_mm": 2.5,
+  "cutter_wall_mm": 1.2,
+  "cutout_clearance_mm": 0.8,
+  "top_z": 59.04,
+  "max_y": -4.158,
+  "parting_z": 40.0,
+  "finger_concave_radius_mm": 12.0,
+  "groove_radius_mm": 8.0,
+  "step_mm": 0.5
+ },
+ "frozen_region": {
+  "rule": "frozen = |x| < 25 (Edit Min X: body, mirror seam) OR z > 38 (parting band 38-40 + case_top; the thenar module, which runs after the shape, owns z > 40 behind the sticks) OR y > max_y - 0.5 = -4.658 (front band that holds max Y = the R1/L1 position)",
+  "edit_min_x": 25.0,
+  "frozen_z": 38.0,
+  "front_band_mm": 0.5,
+  "max_y": -4.158,
+  "hard_limits": "never y > -4.158, never z > 59.04, top plate exactly flat, field exactly symmetric for |x| < 1 (mirror seam), edits mirrored to the left handle (use Mirrored Position)",
+  "python": "gripmetrics.frozen_mask(V)",
+  "nofit_verts_frozen": 106470,
+  "nofit_verts": 219364
+ },
+ "zones": [
+  {
+   "id": 0,
+   "name": "middle root pad",
+   "kind": "contact",
+   "n_points": 69,
+   "segments": [
+    {
+     "bone": "middle_metacarpal",
+     "a": [
+      95.07,
+      -31.1,
+      35.923
+     ],
+     "b": [
+      94.996,
+      -48.606,
+      35.603
+     ],
+     "r": 14.577
+    },
+    {
+     "bone": "middle_proximal",
+     "a": [
+      95.07,
+      -31.1,
+      35.923
+     ],
+     "b": [
+      86.366,
+      -18.405,
+      31.351
+     ],
+     "r": 9.36
+    }
+   ],
+   "nofit_min_gap_mm": 0.86,
+   "nofit_max_gap_mm": 10.88,
+   "nofit_support_pct": 8.7
+  },
+  {
+   "id": 1,
+   "name": "middle PIP",
+   "kind": "contact",
+   "n_points": 22,
+   "segments": [
+    {
+     "bone": "middle_middle",
+     "a": [
+      70.201,
+      5.171,
+      22.861
+     ],
+     "b": [
+      60.875,
+      0.32,
+      21.377
+     ],
+     "r": 8.4
+    }
+   ],
+   "nofit_min_gap_mm": 5.6,
+   "nofit_max_gap_mm": 11.82,
+   "nofit_support_pct": 0.0
+  },
+  {
+   "id": 2,
+   "name": "ring root pad",
+   "kind": "contact",
+   "n_points": 63,
+   "segments": [
+    {
+     "bone": "ring_metacarpal",
+     "a": [
+      92.115,
+      -40.165,
+      15.343
+     ],
+     "b": [
+      92.632,
+      -55.858,
+      19.139
+     ],
+     "r": 14.663
+    },
+    {
+     "bone": "ring_proximal",
+     "a": [
+      92.115,
+      -40.165,
+      15.343
+     ],
+     "b": [
+      84.825,
+      -27.789,
+      11.558
+     ],
+     "r": 8.64
+    }
+   ],
+   "nofit_min_gap_mm": -2.3,
+   "nofit_max_gap_mm": 7.29,
+   "nofit_support_pct": 52.4
+  },
+  {
+   "id": 3,
+   "name": "ring PIP",
+   "kind": "contact",
+   "n_points": 22,
+   "segments": [
+    {
+     "bone": "ring_middle",
+     "a": [
+      71.286,
+      -4.806,
+      4.528
+     ],
+     "b": [
+      62.477,
+      -10.794,
+      3.121
+     ],
+     "r": 7.92
+    }
+   ],
+   "nofit_min_gap_mm": 2.72,
+   "nofit_max_gap_mm": 10.12,
+   "nofit_support_pct": 0.0
+  },
+  {
+   "id": 4,
+   "name": "pinky root pad",
+   "kind": "contact",
+   "n_points": 53,
+   "segments": [
+    {
+     "bone": "pinky_metacarpal",
+     "a": [
+      88.142,
+      -55.256,
+      -1.325
+     ],
+     "b": [
+      89.453,
+      -67.931,
+      5.805
+     ],
+     "r": 14.563
+    },
+    {
+     "bone": "pinky_proximal",
+     "a": [
+      88.142,
+      -55.256,
+      -1.325
+     ],
+     "b": [
+      82.15,
+      -45.811,
+      -3.684
+     ],
+     "r": 7.68
+    }
+   ],
+   "nofit_min_gap_mm": -2.32,
+   "nofit_max_gap_mm": 4.58,
+   "nofit_support_pct": 69.8
+  },
+  {
+   "id": 5,
+   "name": "pinky PIP",
+   "kind": "contact",
+   "n_points": 16,
+   "segments": [
+    {
+     "bone": "pinky_middle",
+     "a": [
+      71.023,
+      -28.27,
+      -8.066
+     ],
+     "b": [
+      64.47,
+      -32.501,
+      -9.045
+     ],
+     "r": 6.96
+    }
+   ],
+   "nofit_min_gap_mm": -4.75,
+   "nofit_max_gap_mm": -0.42,
+   "nofit_support_pct": 100.0
+  },
+  {
+   "id": 6,
+   "name": "pinky distal",
+   "kind": "contact",
+   "n_points": 36,
+   "segments": [
+    {
+     "bone": "pinky_distal",
+     "a": [
+      54.64,
+      -38.848,
+      -10.514
+     ],
+     "b": [
+      48.284,
+      -54.979,
+      -7.107
+     ],
+     "r": 6.24
+    }
+   ],
+   "nofit_min_gap_mm": -3.21,
+   "nofit_max_gap_mm": -1.23,
+   "nofit_support_pct": 100.0
+  },
+  {
+   "id": 7,
+   "name": "R2 fingertip",
+   "kind": "trigger",
+   "n_points": 41,
+   "segments": [
+    {
+     "bone": "middle_distal",
+     "a": [
+      46.887,
+      -6.956,
+      19.151
+     ],
+     "b": [
+      33.188,
+      -21.587,
+      18.168
+     ],
+     "r": 7.44
+    }
+   ],
+   "nofit_min_gap_mm": -0.16,
+   "nofit_max_gap_mm": 3.22,
+   "nofit_support_pct": 78.0
+  },
+  {
+   "id": 8,
+   "name": "R4 fingertip",
+   "kind": "trigger",
+   "n_points": 41,
+   "segments": [
+    {
+     "bone": "ring_distal",
+     "a": [
+      49.264,
+      -19.777,
+      1.01
+     ],
+     "b": [
+      36.685,
+      -35.862,
+      2.032
+     ],
+     "r": 6.96
+    }
+   ],
+   "nofit_min_gap_mm": 0.56,
+   "nofit_max_gap_mm": 1.22,
+   "nofit_support_pct": 100.0
+  },
+  {
+   "id": 9,
+   "name": "palm on swell",
+   "kind": "contact",
+   "n_points": 485,
+   "segments": [
+    {
+     "bone": "middle_metacarpal",
+     "a": [
+      95.07,
+      -31.1,
+      35.923
+     ],
+     "b": [
+      94.7,
+      -118.63,
+      34.323
+     ],
+     "r": 14.577
+    },
+    {
+     "bone": "ring_metacarpal",
+     "a": [
+      92.115,
+      -40.165,
+      15.343
+     ],
+     "b": [
+      94.7,
+      -118.63,
+      34.323
+     ],
+     "r": 14.663
+    },
+    {
+     "bone": "pinky_metacarpal",
+     "a": [
+      88.142,
+      -55.256,
+      -1.325
+     ],
+     "b": [
+      94.7,
+      -118.63,
+      34.323
+     ],
+     "r": 14.563
+    }
+   ],
+   "nofit_min_gap_mm": -4.26,
+   "nofit_max_gap_mm": 26.51,
+   "nofit_support_pct": 52.4
+  },
+  {
+   "id": 10,
+   "name": "index proximal",
+   "kind": "frozen (R1, top)",
+   "n_points": 85,
+   "segments": [
+    {
+     "bone": "index_proximal",
+     "a": [
+      88.79,
+      -32.12,
+      58.423
+     ],
+     "b": [
+      62.685,
+      -0.069,
+      49.003
+     ],
+     "r": 9.12
+    }
+   ],
+   "nofit_min_gap_mm": -1.54,
+   "nofit_max_gap_mm": 8.17,
+   "nofit_support_pct": 57.6
+  },
+  {
+   "id": 11,
+   "name": "index middle",
+   "kind": "frozen (R1, top)",
+   "n_points": 49,
+   "segments": [
+    {
+     "bone": "index_middle",
+     "a": [
+      62.685,
+      -0.069,
+      49.003
+     ],
+     "b": [
+      40.431,
+      5.0,
+      40.526
+     ],
+     "r": 8.16
+    }
+   ],
+   "nofit_min_gap_mm": 0.07,
+   "nofit_max_gap_mm": 2.84,
+   "nofit_support_pct": 73.5
+  },
+  {
+   "id": 12,
+   "name": "index distal",
+   "kind": "frozen (R1, top)",
+   "n_points": 40,
+   "segments": [
+    {
+     "bone": "index_distal",
+     "a": [
+      40.431,
+      5.0,
+      40.526
+     ],
+     "b": [
+      22.129,
+      2.253,
+      33.441
+     ],
+     "r": 7.2
+    }
+   ],
+   "nofit_min_gap_mm": -0.62,
+   "nofit_max_gap_mm": 3.8,
+   "nofit_support_pct": 52.5
+  }
+ ],
+ "caps_names": [
+  "palm",
+  "index_metacarpal",
+  "index_proximal",
+  "index_middle",
+  "index_distal",
+  "middle_metacarpal",
+  "middle_proximal",
+  "middle_middle",
+  "middle_distal",
+  "ring_metacarpal",
+  "ring_proximal",
+  "ring_middle",
+  "ring_distal",
+  "pinky_metacarpal",
+  "pinky_proximal",
+  "pinky_middle",
+  "pinky_distal",
+  "thumb_metacarpal",
+  "thumb_proximal",
+  "thumb_distal"
+ ],
+ "palmar": {
+  "palm": {
+   "dir": null,
+   "rig_vs_chain_deg": null,
+   "source": null
+  },
+  "index_metacarpal": {
+   "dir": [
+    -0.9779,
+    -0.0086,
+    -0.2088
+   ],
+   "rig_vs_chain_deg": 24.7,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "index_proximal": {
+   "dir": [
+    -0.7613,
+    -0.6435,
+    -0.0797
+   ],
+   "rig_vs_chain_deg": 12.2,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "index_middle": {
+   "dir": [
+    -0.0478,
+    -0.9075,
+    -0.4174
+   ],
+   "rig_vs_chain_deg": 21.0,
+   "source": "rig bone X axis (sign from the chain flexion)"
+  },
+  "index_distal": {
+   "dir": [
+    0.2719,
+    -0.8942,
+    -0.3556
+   ],
+   "rig_vs_chain_deg": 24.6,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "middle_metacarpal": {
+   "dir": [
+    -0.9789,
+    0.0079,
+    -0.2042
+   ],
+   "rig_vs_chain_deg": 17.0,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "middle_proximal": {
+   "dir": [
+    -0.8111,
+    -0.5809,
+    -0.0687
+   ],
+   "rig_vs_chain_deg": 1.7,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "middle_middle": {
+   "dir": [
+    0.4624,
+    -0.8867,
+    -0.0075
+   ],
+   "rig_vs_chain_deg": 14.5,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "middle_distal": {
+   "dir": [
+    0.7052,
+    -0.6749,
+    0.2174
+   ],
+   "rig_vs_chain_deg": 3.3,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "ring_metacarpal": {
+   "dir": [
+    -0.9798,
+    -0.0769,
+    -0.1844
+   ],
+   "rig_vs_chain_deg": 5.0,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "ring_proximal": {
+   "dir": [
+    -0.8658,
+    -0.4992,
+    0.0352
+   ],
+   "rig_vs_chain_deg": 10.3,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "ring_middle": {
+   "dir": [
+    0.4992,
+    -0.8079,
+    0.3134
+   ],
+   "rig_vs_chain_deg": 11.3,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "ring_distal": {
+   "dir": [
+    0.7408,
+    -0.5554,
+    0.3777
+   ],
+   "rig_vs_chain_deg": 8.3,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "pinky_metacarpal": {
+   "dir": [
+    -0.9801,
+    -0.1641,
+    -0.1114
+   ],
+   "rig_vs_chain_deg": 36.9,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "pinky_proximal": {
+   "dir": [
+    -0.8475,
+    -0.4822,
+    0.2219
+   ],
+   "rig_vs_chain_deg": 20.2,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "pinky_middle": {
+   "dir": [
+    0.3082,
+    -0.6402,
+    0.7036
+   ],
+   "rig_vs_chain_deg": 18.2,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "pinky_distal": {
+   "dir": [
+    0.8311,
+    -0.2196,
+    0.5109
+   ],
+   "rig_vs_chain_deg": 5.7,
+   "source": "rig bone Z axis (sign from the chain flexion)"
+  },
+  "thumb_metacarpal": {
+   "dir": [
+    0.1814,
+    0.4933,
+    -0.8507
+   ],
+   "rig_vs_chain_deg": 6.9,
+   "source": "rig bone X axis (sign from the chain flexion)"
+  },
+  "thumb_proximal": {
+   "dir": [
+    -0.2043,
+    -0.0349,
+    0.9783
+   ],
+   "rig_vs_chain_deg": 6.6,
+   "source": "rig bone X axis (sign from the chain flexion)"
+  },
+  "thumb_distal": {
+   "dir": [
+    -0.2042,
+    -0.0738,
+    0.9761
+   ],
+   "rig_vs_chain_deg": 5.4,
+   "source": "rig bone X axis (sign from the chain flexion)"
+  }
+ },
+ "seats": {
+  "R2": {
+   "press_face_center": [
+    39.1467,
+    -25.1335,
+    19.7531
+   ],
+   "press_face_normal": [
+    -0.70517,
+    0.67487,
+    -0.21746
+   ],
+   "press_face_area_mm2": 100.88,
+   "press_face_source": "trigger_solver.press_face(): outer cap of the finger end",
+   "generator_top_center (1 mm lower, do not use)": [
+    40.211,
+    -25.616,
+    22.14
+   ],
+   "seat_plane_point": [
+    39.2877,
+    -25.2685,
+    19.7966
+   ],
+   "skin_under_face_mm": 0.2,
+   "seat_radius_mm": 2.5,
+   "seat_fade_mm (suggested)": 5.0,
+   "opening_section_segments": 84,
+   "cutter_wall_mm": 1.2,
+   "finger": "middle",
+   "fingertip_capsule": "middle_distal",
+   "pad_axis_point": [
+    34.253,
+    -20.449,
+    18.244
+   ],
+   "press_dir": [
+    0.7051900029182434,
+    -0.6748600006103516,
+    0.21744999289512634
+   ],
+   "target_center": [
+    39.1473,
+    -25.1326,
+    19.7531
+   ],
+   "center_to_target_mm": 0.0011,
+   "normal_to_target_deg": 0.0,
+   "trigger_parameters": {
+    "trigger length": 26.860122680664062,
+    "trigger radius": 32.02515411376953,
+    "button radius offset": 5.6412034034729,
+    "shift z": 4.347053050994873,
+    "button rotation": 1.0549986362457275,
+    "tip angle offset": -0.22587965428829193,
+    "tip shear": -0.267672061920166,
+    "x offset": 0.0
+   },
+   "nofit_skin_at_press_center_signed_mm": 0.648
+  },
+  "R4": {
+   "press_face_center": [
+    41.4591,
+    -39.455,
+    4.4872
+   ],
+   "press_face_normal": [
+    -0.74075,
+    0.55549,
+    -0.37778
+   ],
+   "press_face_area_mm2": 99.64,
+   "press_face_source": "trigger_solver.press_face(): outer cap of the finger end",
+   "generator_top_center (1 mm lower, do not use)": [
+    42.87,
+    -40.999,
+    7.841
+   ],
+   "seat_plane_point": [
+    41.6073,
+    -39.5661,
+    4.5627
+   ],
+   "skin_under_face_mm": 0.2,
+   "seat_radius_mm": 2.5,
+   "seat_fade_mm (suggested)": 5.0,
+   "opening_section_segments": 76,
+   "cutter_wall_mm": 1.2,
+   "finger": "ring",
+   "fingertip_capsule": "ring_distal",
+   "pad_axis_point": [
+    36.685,
+    -35.862,
+    2.032
+   ],
+   "press_dir": [
+    0.7408499717712402,
+    -0.555400013923645,
+    0.3777199983596802
+   ],
+   "target_center": [
+    41.4704,
+    -39.4498,
+    4.4722
+   ],
+   "center_to_target_mm": 0.0195,
+   "normal_to_target_deg": 0.006,
+   "trigger_parameters": {
+    "trigger length": 43.49855422973633,
+    "trigger radius": 66.2650375366211,
+    "button radius offset": 5.346806526184082,
+    "shift z": 13.068120956420898,
+    "button rotation": 0.572091817855835,
+    "tip angle offset": -0.4104703962802887,
+    "tip shear": 0.3584391176700592,
+    "x offset": 0.0
+   },
+   "nofit_skin_at_press_center_signed_mm": 1.52
+  }
+ },
+ "keepouts": {
+  "static_cutout_Stick_R_cutout_appendix": {
+   "object": "Stick R cutout appendix",
+   "kind": "static_cutout",
+   "verts": 19,
+   "nofit_wall_to_skin_mm": null,
+   "nofit_cutout_clearance_mm": 6.04
+  },
+  "static_cutout_Stick_R_cutout_flat": {
+   "object": "Stick R cutout flat",
+   "kind": "static_cutout",
+   "verts": 14,
+   "nofit_wall_to_skin_mm": null,
+   "nofit_cutout_clearance_mm": 3.24
+  },
+  "internal_battery_bool": {
+   "object": "battery bool",
+   "kind": "internal",
+   "verts": 337,
+   "nofit_wall_to_skin_mm": -9.94,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_battery_wire_space": {
+   "object": "battery wire space",
+   "kind": "internal",
+   "verts": 12,
+   "nofit_wall_to_skin_mm": 1.04,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_battery_wire_space_001": {
+   "object": "battery wire space.001",
+   "kind": "internal",
+   "verts": 22,
+   "nofit_wall_to_skin_mm": 2.17,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_corner_relief": {
+   "object": "corner relief",
+   "kind": "internal",
+   "verts": 16,
+   "nofit_wall_to_skin_mm": 9.25,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_cutout_004": {
+   "object": "cutout.004",
+   "kind": "internal",
+   "verts": 12,
+   "nofit_wall_to_skin_mm": null,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_hollow_cutout": {
+   "object": "hollow cutout",
+   "kind": "internal",
+   "verts": 28,
+   "nofit_wall_to_skin_mm": -1.02,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_jst2p_pass": {
+   "object": "jst2p pass",
+   "kind": "internal",
+   "verts": 16,
+   "nofit_wall_to_skin_mm": 0.25,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_marmota_cutout": {
+   "object": "marmota cutout",
+   "kind": "internal",
+   "verts": 24,
+   "nofit_wall_to_skin_mm": 4.78,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_middle_pillars": {
+   "object": "middle pillars",
+   "kind": "internal",
+   "verts": 128,
+   "nofit_wall_to_skin_mm": 7.03,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_middle_supports": {
+   "object": "middle supports",
+   "kind": "internal",
+   "verts": 68,
+   "nofit_wall_to_skin_mm": -0.04,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_pcb_cutout": {
+   "object": "pcb cutout",
+   "kind": "internal",
+   "verts": 56,
+   "nofit_wall_to_skin_mm": 5.6,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_screw_bools": {
+   "object": "screw bools",
+   "kind": "internal",
+   "verts": 978,
+   "nofit_wall_to_skin_mm": -12.13,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_side_pillars": {
+   "object": "side pillars",
+   "kind": "internal",
+   "verts": 512,
+   "nofit_wall_to_skin_mm": 7.41,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_wire_bool": {
+   "object": "wire bool",
+   "kind": "internal",
+   "verts": 8,
+   "nofit_wall_to_skin_mm": null,
+   "nofit_cutout_clearance_mm": null
+  },
+  "internal_wire_bool_2": {
+   "object": "wire bool 2",
+   "kind": "internal",
+   "verts": 8,
+   "nofit_wall_to_skin_mm": null,
+   "nofit_cutout_clearance_mm": null
+  }
+ },
+ "hand": {
+  "object_points": "hand points",
+  "object_rig": "hand rig",
+  "collection": "hand fit",
+  "points_attributes": {
+   "radius": "capsule radius at the point (float, point)",
+   "bone_id": "index into the 'hand rig' bones (int, point)",
+   "seg_first / seg_last": "first / last point of its bone (bool, point)"
+  },
+  "vertex_group": "'fill zones' (1 = metacarpals of middle/ring/pinky and pinky distal; ~0.4 = parts of the proximal / middle phalanges; 0 = index, thumb, palm heel, R2/R4 fingertips)",
+  "bones": [
+   "palm",
+   "index_metacarpal",
+   "index_proximal",
+   "index_middle",
+   "index_distal",
+   "middle_metacarpal",
+   "middle_proximal",
+   "middle_middle",
+   "middle_distal",
+   "ring_metacarpal",
+   "ring_proximal",
+   "ring_middle",
+   "ring_distal",
+   "pinky_metacarpal",
+   "pinky_proximal",
+   "pinky_middle",
+   "pinky_distal",
+   "thumb_metacarpal",
+   "thumb_proximal",
+   "thumb_distal"
+  ],
+  "points": 826,
+  "skins": "'<bone> skin' meshes in 'hand fit' (display only)",
+  "stage_input": "modifier 'hand fit' input 'Hand Points' (object 'hand points'); context socket 'Hand Points' in a module",
+  "seat_empties": [
+   "R2 seat",
+   "R4 seat",
+   "R1 seat"
+  ],
+  "pose_vs_v27_max_mm": 0.0
+ },
+ "triggers_objects": {
+  "parts": [
+   "R2",
+   "R4",
+   "L2",
+   "L4"
+  ],
+  "cutters": [
+   "R2 bool",
+   "R4 bool"
+  ],
+  "switches": [
+   "R2_pcb_button",
+   "R4_pcb_button"
+  ],
+  "parameters": "node groups 'GripV R2 parameters' / 'GripV R4 parameters' > node 'trigger parameters.001' (solved, do not change)",
+  "stage_reads": "a module may read 'R2', 'R4', 'R2 bool', 'R4 bool' with Object Info (no cycle; mod_seats.py does)"
+ },
+ "arrays": {
+  "zone_pts": [
+   1022,
+   3
+  ],
+  "zone_r": [
+   1022
+  ],
+  "zone_id": [
+   1022
+  ],
+  "zone_bone": [
+   1022
+  ],
+  "zone_w": [
+   1022
+  ],
+  "zone_t": [
+   1022
+  ],
+  "zone_dir_nearest": [
+   1022,
+   3
+  ],
+  "zone_dir_palmar": [
+   1022,
+   3
+  ],
+  "zone_target_nearest": [
+   1022,
+   3
+  ],
+  "zone_target_palmar": [
+   1022,
+   3
+  ],
+  "zone_dir_flexion": [
+   1022,
+   3
+  ],
+  "zone_target_flexion": [
+   1022,
+   3
+  ],
+  "zone_gap_nofit": [
+   1022
+  ],
+  "zone_axis_inside_nofit": [
+   1022
+  ],
+  "zone_surf_nofit": [
+   1022,
+   3
+  ],
+  "zone_frozen": [
+   1022
+  ],
+  "caps_a": [
+   20,
+   3
+  ],
+  "caps_b": [
+   20,
+   3
+  ],
+  "caps_r": [
+   20
+  ],
+  "caps_palmar": [
+   20,
+   3
+  ],
+  "bone_frames": [
+   20,
+   3,
+   3
+  ],
+  "hand_points": [
+   826,
+   3
+  ],
+  "hand_points_radius": [
+   826
+  ],
+  "hand_points_bone_id": [
+   826
+  ],
+  "hand_points_fill_zones": [
+   826
+  ],
+  "nofit_V": [
+   219364,
+   3
+  ],
+  "nofit_T": [
+   438724,
+   3
+  ],
+  "nofit_frozen": [
+   219364
+  ],
+  "nofit_handle": [
+   219364
+  ],
+  "seat_R2_center": [
+   3
+  ],
+  "seat_R2_normal": [
+   3
+  ],
+  "seat_R2_plane_point": [
+   3
+  ],
+  "seat_R2_opening_segments": [
+   84,
+   2,
+   3
+  ],
+  "seat_R2_press_pts": [
+   8,
+   3
+  ],
+  "trigger_R2_V": [
+   465,
+   3
+  ],
+  "trigger_R2_T": [
+   938,
+   3
+  ],
+  "cutter_R2_V": [
+   664,
+   3
+  ],
+  "cutter_R2_T": [
+   1320,
+   3
+  ],
+  "switch_R2_V": [
+   64,
+   3
+  ],
+  "switch_R2_T": [
+   124,
+   3
+  ],
+  "seat_R4_center": [
+   3
+  ],
+  "seat_R4_normal": [
+   3
+  ],
+  "seat_R4_plane_point": [
+   3
+  ],
+  "seat_R4_opening_segments": [
+   76,
+   2,
+   3
+  ],
+  "seat_R4_press_pts": [
+   8,
+   3
+  ],
+  "trigger_R4_V": [
+   729,
+   3
+  ],
+  "trigger_R4_T": [
+   1466,
+   3
+  ],
+  "cutter_R4_V": [
+   1112,
+   3
+  ],
+  "cutter_R4_T": [
+   2216,
+   3
+  ],
+  "switch_R4_V": [
+   64,
+   3
+  ],
+  "switch_R4_T": [
+   124,
+   3
+  ],
+  "static_cutout_Stick_R_cutout_appendix_V": [
+   19,
+   3
+  ],
+  "static_cutout_Stick_R_cutout_appendix_T": [
+   34,
+   3
+  ],
+  "static_cutout_Stick_R_cutout_flat_V": [
+   14,
+   3
+  ],
+  "static_cutout_Stick_R_cutout_flat_T": [
+   24,
+   3
+  ],
+  "internal_battery_bool_V": [
+   337,
+   3
+  ],
+  "internal_battery_bool_T": [
+   670,
+   3
+  ],
+  "internal_battery_wire_space_V": [
+   12,
+   3
+  ],
+  "internal_battery_wire_space_T": [
+   20,
+   3
+  ],
+  "internal_battery_wire_space_001_V": [
+   22,
+   3
+  ],
+  "internal_battery_wire_space_001_T": [
+   40,
+   3
+  ],
+  "internal_corner_relief_V": [
+   16,
+   3
+  ],
+  "internal_corner_relief_T": [
+   24,
+   3
+  ],
+  "internal_cutout_004_V": [
+   12,
+   3
+  ],
+  "internal_cutout_004_T": [
+   20,
+   3
+  ],
+  "internal_hollow_cutout_V": [
+   28,
+   3
+  ],
+  "internal_hollow_cutout_T": [
+   52,
+   3
+  ],
+  "internal_jst2p_pass_V": [
+   16,
+   3
+  ],
+  "internal_jst2p_pass_T": [
+   24,
+   3
+  ],
+  "internal_marmota_cutout_V": [
+   24,
+   3
+  ],
+  "internal_marmota_cutout_T": [
+   44,
+   3
+  ],
+  "internal_middle_pillars_V": [
+   128,
+   3
+  ],
+  "internal_middle_pillars_T": [
+   248,
+   3
+  ],
+  "internal_middle_supports_V": [
+   68,
+   3
+  ],
+  "internal_middle_supports_T": [
+   128,
+   3
+  ],
+  "internal_pcb_cutout_V": [
+   56,
+   3
+  ],
+  "internal_pcb_cutout_T": [
+   108,
+   3
+  ],
+  "internal_screw_bools_V": [
+   978,
+   3
+  ],
+  "internal_screw_bools_T": [
+   1940,
+   3
+  ],
+  "internal_side_pillars_V": [
+   512,
+   3
+  ],
+  "internal_side_pillars_T": [
+   1008,
+   3
+  ],
+  "internal_wire_bool_V": [
+   8,
+   3
+  ],
+  "internal_wire_bool_T": [
+   12,
+   3
+  ],
+  "internal_wire_bool_2_V": [
+   8,
+   3
+  ],
+  "internal_wire_bool_2_T": [
+   12,
+   3
+  ]
+ },
+ "arrays_meaning": {
+  "zone_pts": "zone sample points ON THE CAPSULE AXIS, every 0.5 mm along each zone segment (N,3)",
+  "zone_r": "capsule radius at each point (N,)",
+  "zone_id": "zone index into 'zones' (N,)",
+  "zone_bone": "bone index into 'caps_names' (N,)",
+  "zone_w": "axis length each point stands for (mm)",
+  "zone_t": "position along its segment 0..1 (0 = segment start a)",
+  "zone_dir_nearest": "unit direction from the axis point to the nearest point of the NO-FIT skin (flipped if the axis is inside it)",
+  "zone_dir_palmar": "unit palmar direction of the bone (rig bone axis, perpendicular to the bone, sign from the chain flexion)",
+  "zone_target_nearest": "axis + dir_nearest * (r - Press): where the case surface should be for the rigid finger to sink Press = 0.5 mm",
+  "zone_target_palmar": "axis + dir_palmar * (r - Press): the same along the palmar direction",
+  "zone_dir_flexion": "unit flexion direction from the capsule chain only (child bone bends towards the palm), perpendicular to the bone; differs from dir_palmar by the bone roll (see palmar.rig_vs_chain_deg)",
+  "zone_target_flexion": "axis + dir_flexion * (r - Press)",
+  "zone_gap_nofit": "signed gap of each axis point to the no-fit skin minus r (< 0 = the rigid finger sinks in)",
+  "zone_axis_inside_nofit": "axis point inside the no-fit case",
+  "zone_surf_nofit": "nearest no-fit skin point",
+  "zone_frozen": "that nearest skin point lies in the frozen region (the shape cannot move it)",
+  "caps_a / caps_b / caps_r": "every hand capsule (axis a-b, radius r), order of 'caps_names': the no-dig set",
+  "caps_palmar": "palmar unit direction per capsule (zeros where undefined: palm heel)",
+  "bone_frames": "world 3x3 rotation of each pose bone of 'hand rig' (columns X, Y = along the bone, Z), order of caps_names",
+  "hand_points*": "the 'hand points' cloud as evaluated (positions, radius, bone_id, 'fill zones' weight)",
+  "nofit_V / nofit_T": "the no-fit baseline skin (base.blend evaluated: shape pass-through, thenar on)",
+  "nofit_frozen": "per no-fit vertex: in the frozen region",
+  "nofit_handle": "per no-fit vertex: right handle x >= 25, z < 40",
+  "seat_<P>_center / _normal": "press face of trigger P (outer cap, area-weighted centre and normal, from the evaluated trigger in base.blend)",
+  "seat_<P>_plane_point": "a point of the seat plane = centre - 0.2 * normal (the skin around the opening lies in this plane)",
+  "seat_<P>_opening_segments": "section of the right-hand cutter '<P> bool' with the seat plane (M,2,3): the opening outline",
+  "seat_<P>_press_pts": "vertices of the press-face polygons",
+  "trigger_<P>_V/T": "evaluated trigger part",
+  "cutter_<P>_V/T": "case opening cutter '<P> bool' (lever channel; both sides, Mirror)",
+  "switch_<P>_V/T": "PCB switch (fixed)",
+  "static_cutout_* / internal_*": "keep-out meshes near the right handle (x >= 5, z < 57 within 15 mm), from the no-fit run"
+ }
+}

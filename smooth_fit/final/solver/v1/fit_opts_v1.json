@@ -1,0 +1,6 @@
+{"source": "solve/d1.npz: dense_fit warm-started from p_dense/v3/scratch/c8.npz (the dense prototype's best) with the seats made soft (seat_corridor 100: every rim point is a soft target, weight Seat Pull 0.05; only the 4 mm core disc stays a hard box)",
+ "frozen": "2026-10-20",
+ "opt": {"outer_iters": 10, "newton_iters": 15, "curv_weight": 3000.0, "trust": 2.0, "prox": 0.3, "curv_schedule": [1.0],
+         "contact_mode": "deep", "w_deep": 3.0, "w_support": 0.02, "min_concave_radius": 18.0,
+         "seat_corridor": 100.0, "seat_corridor_w": 0.05},
+ "cold": {"outer_iters": 18, "curv_schedule": [0.01, 0.1, 0.3, 1.0]}}

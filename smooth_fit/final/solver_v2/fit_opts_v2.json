@@ -1,0 +1,4 @@
+{"opt": {"smoothness": 34.0, "palm_give": 3.5, "finger_give": 1.5, "touch": 0.3, "stroke_clear": 0.3,
+         "screw_wall": 3.0, "middle_pip": 0.0, "top_clear": 3.0},
+ "note": "v2 options as first installed (2026-10-20, before review round 2). Use with solver_v2/lowfreq_v2.py to reproduce the v2 shape (h max difference 0.0 against v2/solve/best.npz).",
+ "source": "v2/solve/best.npz (v2 agent, 2026-10-20), reproduced by final/refit.py"}
