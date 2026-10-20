@@ -6,7 +6,7 @@ What is in this file
   the pose you see is what the solver computed.
 - "basemesh GripV": the GripV case cage from Grip.blend with an extra
   Armature modifier at the top of the stack ("case rig").
-- "case rig": 8 handles that reshape the case (grab them in Pose Mode):
+- "case rig": 9 handles that reshape the case (grab them in Pose Mode):
     bump              palm bump; moves with your palm pocket (G to move)
     middle_proximal   wall under the middle finger, proximal phalanx
     middle_middle     wall under the middle finger, middle phalanx
@@ -15,13 +15,24 @@ What is in this file
     pinky_proximal    wall under the pinky, proximal phalanx
     pinky_middle      wall under the pinky, middle phalanx
     pinky_distal      wall under the pinky, fingertip
-  The wall handles only slide along their local Y (the wall normal).
+    top_back          back edge of the top face; slides forward towards
+                      the sticks so your thenar rests on a smooth slope
+  The wall handles and top_back only slide along their local Y.
+  How the walls are fitted: the middle phalanges grab the front of the
+  handle next to their PIP joint, and the handle is pressed into the
+  pads at the finger roots (palm over the knuckles). Those zones touch
+  the case; everywhere else the hand may only clear it.
+  The palm is cupped: the ring and pinky knuckles sit deeper towards the
+  palm (palm_cup_deg), so the knuckle arch wraps around the palm swell.
   The pinky has no button. It is turned to curl right beside the ring
   finger (same plane, so it wraps the handle instead of passing under
   it) and keeps your posed pinky curl, changed by as much as the ring
   finger's curl changed. Its walls move until all three phalanges touch.
   Everything above Z 38 (top part, index wrap) and the R2/R4 button
-  areas never move.
+  areas never move, except the back edge of the top face (top_back).
+- "stick cutouts" collection (hidden): the stick and home button cutouts
+  baked from Grip.blend. top_back stops when the case gets within
+  stick_clearance_mm of any of them. Re-bake them if the sticks move.
 - "fitted variants" collection (hidden): ready cages for 4 R1 overlaps.
   Any of them can replace "basemesh GripV" in Grip.blend.
 
@@ -46,3 +57,12 @@ Settings
   pinky_extra_curl_deg  pinky curls this much more (+) or less (-) than
                    your posed pinky curl; the case follows it
   min_thickness_mm walls may not make the handle thinner than this
+  root_pad_frac    part of the proximal phalanx (from the knuckle) that
+                   touches, together with the palm over the knuckle
+  pip_pad_frac     part of the middle phalanx (from the PIP joint) that
+                   touches the front of the handle
+  palm_cup_deg     how far the pinky metacarpal flexes towards the palm
+                   (ring finger half as much); 0 = your scanned arch
+  top_back_max_mm  how far the top face back edge may move forward
+                   (0 = leave it where it is)
+  stick_clearance_mm  closest the case may come to the stick cutouts
