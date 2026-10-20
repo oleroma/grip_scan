@@ -1,0 +1,188 @@
+{
+ "blend": "/tmp/claude-0/sdf/smooth/final/Grip_smooth.blend",
+ "run": "/tmp/claude-0/sdf/smooth/final/runs/v3_check",
+ "options": {
+  "palm_give": 3.5,
+  "finger_give": 1.5,
+  "stroke_clear": 0.3,
+  "screw_wall": 3.0
+ },
+ "rows": [
+  {
+   "name": "relief: dents / bumps (prominence >= 1 mm vs the 12-16 mm ring)",
+   "value": [
+    0,
+    0
+   ],
+   "pass_": true,
+   "limit": "0 dents, <= 2 bumps"
+  },
+  {
+   "name": "6 mm: area concave R<20 vs plain GripV, same footprint (ratio)",
+   "value": 1.02,
+   "pass_": "True",
+   "limit": "<= 1.5"
+  },
+  {
+   "name": "6 mm: area convex R<8 vs plain GripV, same footprint (ratio)",
+   "value": 0.76,
+   "pass_": "True",
+   "limit": "<= 1.5"
+  },
+  {
+   "name": "GripV concave creases: min R ratio vs no-fit, % > 20% tighter (same place / 2 mm neighbourhood)",
+   "value": [
+    [
+     0.38,
+     0.22
+    ],
+    [
+     0.79,
+     0.02
+    ]
+   ],
+   "pass_": null,
+   "limit": "info (v1: 0.48, 7.56 %); the same-place value is a single-vertex measure"
+  },
+  {
+   "name": "GripV convex creases: min R ratio vs no-fit, % > 20% tighter (same place / 2 mm neighbourhood)",
+   "value": [
+    [
+     0.77,
+     0.24
+    ],
+    [
+     0.85,
+     0.0
+    ]
+   ],
+   "pass_": null,
+   "limit": "info (v1: 0.48, 7.56 %); the same-place value is a single-vertex measure"
+  },
+  {
+   "name": "touch middle root pad: gap mm",
+   "value": 0.87,
+   "pass_": false,
+   "limit": "<= 0.3 (touching); negative = overlap"
+  },
+  {
+   "name": "touch middle PIP: gap mm",
+   "value": 5.51,
+   "pass_": false,
+   "limit": "<= 0.3 (touching); negative = overlap"
+  },
+  {
+   "name": "touch ring root pad: gap mm",
+   "value": -1.44,
+   "pass_": true,
+   "limit": "<= 0.3 (touching); negative = overlap"
+  },
+  {
+   "name": "touch ring PIP: gap mm",
+   "value": 3.44,
+   "pass_": false,
+   "limit": "<= 0.3 (touching); negative = overlap"
+  },
+  {
+   "name": "touch pinky root pad: gap mm",
+   "value": -2.2,
+   "pass_": true,
+   "limit": "<= 0.3 (touching); negative = overlap"
+  },
+  {
+   "name": "touch pinky PIP: gap mm",
+   "value": -2.91,
+   "pass_": true,
+   "limit": "<= 0.3 (touching); negative = overlap"
+  },
+  {
+   "name": "touch pinky distal: gap mm",
+   "value": -2.0,
+   "pass_": true,
+   "limit": "<= 0.3 (touching); negative = overlap"
+  },
+  {
+   "name": "touch palm on swell: gap mm",
+   "value": -3.37,
+   "pass_": true,
+   "limit": "<= 0.3 (touching); negative = overlap"
+  },
+  {
+   "name": "index capsules (frozen R1 region, plain value; Finger Give does not apply): gap mm",
+   "value": {
+    "index_metacarpal": -2.63,
+    "index_proximal": -1.54,
+    "index_middle": 0.07,
+    "index_distal": -0.62
+   },
+   "pass_": null,
+   "limit": "info"
+  },
+  {
+   "name": "soft-tissue allowance (Palm Give 3.5, Finger Give 1.5): capsules over it",
+   "value": "none",
+   "pass_": true,
+   "limit": "none"
+  },
+  {
+   "name": "trigger stroke R2: fingertip gap at rest / fully pressed mm",
+   "value": [
+    0.97,
+    0.49
+   ],
+   "pass_": true,
+   "limit": "pressed >= 0.3"
+  },
+  {
+   "name": "trigger stroke R4: fingertip gap at rest / fully pressed mm",
+   "value": [
+    1.3,
+    0.85
+   ],
+   "pass_": true,
+   "limit": "pressed >= 0.3"
+  },
+  {
+   "name": "screw-channel wall min mm (where plain GripV has >= 3)",
+   "value": 3.0,
+   "pass_": true,
+   "limit": ">= 3.0"
+  },
+  {
+   "name": "frozen region change vs no-fit mm",
+   "value": 0.0,
+   "pass_": true,
+   "limit": "<= 0.05"
+  },
+  {
+   "name": "mirror deviation mm",
+   "value": 0.0,
+   "pass_": true,
+   "limit": "<= 0.05"
+  },
+  {
+   "name": "case_top vs no-fit: max dev mm, verts > 0.05 mm",
+   "value": [
+    0.012,
+    0
+   ],
+   "pass_": true,
+   "limit": "<= 0.05 (or <= 2 isolated verts: remesh noise)"
+  },
+  {
+   "name": "case_middle_plate vs no-fit: max dev mm, verts > 0.05 mm",
+   "value": [
+    0.014,
+    0
+   ],
+   "pass_": true,
+   "limit": "<= 0.05 (or <= 2 isolated verts: remesh noise)"
+  },
+  {
+   "name": "bbox x extent vs no-fit mm (open question)",
+   "value": -0.596,
+   "pass_": null,
+   "limit": "info"
+  }
+ ]
+}

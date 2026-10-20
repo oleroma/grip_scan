@@ -1,0 +1,18 @@
+{
+ "opt": {
+  "smoothness": 34.0,
+  "palm_give": 3.5,
+  "finger_give": 1.5,
+  "touch": 0.3,
+  "stroke_clear": 0.3,
+  "screw_wall": 3.0,
+  "middle_pip": 0.0,
+  "top_clear": 3.0,
+  "touch_wmin": 0.5,
+  "touch_reach": 1.0,
+  "w_dent": 300000.0,
+  "w_hard": 10000000.0
+ },
+ "note": "SPEC v2 inputs of final/refit.py -> solver_v2/lowfreq.py, v3 settings (review round 2, 2026-10-20): touch rows only for reachable zones within Touch Reach, dent rows above Give and below the hard rows. The file's controls ('GripV hand fit parameters' and the hidden modifier inputs Middle PIP Pull / Top Clear / Touch Reach) override these when they exist. v2 options: solver_v2/fit_opts_v2.json; v1 options: solver/v1/fit_opts_v1.json",
+ "source": "final/work/v3 (harness variant q_dent3e5: o_hard1e7 with w_dent 3e5), installed by final/refit.py"
+}

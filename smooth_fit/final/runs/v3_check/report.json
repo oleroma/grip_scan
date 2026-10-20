@@ -1,0 +1,2816 @@
+{
+ "inputs": {
+  "run": "/tmp/claude-0/sdf/smooth/final/runs/v3_check",
+  "base_run": "/tmp/claude-0/sdf/smooth/final/runs/base_Grip_smooth_high_low",
+  "stage": null,
+  "base": null,
+  "caps": null,
+  "blend": null,
+  "object": "basemesh GripV",
+  "variant": "GripV",
+  "cutouts": null,
+  "triggers": null,
+  "out": null,
+  "quick": false,
+  "nofit_run": "/tmp/claude-0/sdf/smooth/final/runs/nofit_fix",
+  "no_smooth": false
+ },
+ "parts": {
+  "case_top": {
+   "volume_mm3": 34131.7,
+   "bbox": [
+    [
+     -81.245,
+     -81.82,
+     40.0
+    ],
+    [
+     81.245,
+     -4.158,
+     59.038
+    ]
+   ],
+   "raw_signed_volume_mm3": 34131.71,
+   "outward_winding": true,
+   "verts": 95927,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 2,
+   "genus": 28.0,
+   "top_face": {
+    "max_z": 59.03802,
+    "max_z_ok": false,
+    "verts_at_max_z": 2605,
+    "tris_at_max_z": 2691,
+    "top_area_mm2": 4764.1,
+    "verts_above_59.04": 0,
+    "top_y_min": -62.368,
+    "top_y_max": -10.721,
+    "top_y_min_right": -62.367,
+    "top_y_min_left": -62.367
+   },
+   "euler_char": -52,
+   "volume_bmesh_mm3": 34131.8,
+   "base_volume_bmesh_mm3": 34383.7,
+   "base_euler_char": -54,
+   "base_raw_signed_volume_mm3": 34386.75,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 34386.8,
+   "volume_change_mm3": -255.0,
+   "bbox_shift_max_mm": 0.01,
+   "base_top_face": {
+    "max_z": 59.03802,
+    "max_z_ok": false,
+    "verts_at_max_z": 1933,
+    "tris_at_max_z": 2014,
+    "top_area_mm2": 5500.9,
+    "verts_above_59.04": 0,
+    "top_y_min": -69.128,
+    "top_y_max": -10.327,
+    "top_y_min_right": -69.126,
+    "top_y_min_left": -69.126
+   }
+  },
+  "case_bottom": {
+   "volume_mm3": 174053.7,
+   "bbox": [
+    [
+     -82.3,
+     -90.62,
+     -15.323
+    ],
+    [
+     82.3,
+     -4.158,
+     40.0
+    ]
+   ],
+   "raw_signed_volume_mm3": 174053.67,
+   "outward_winding": true,
+   "verts": 128593,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 11.0,
+   "euler_char": -20,
+   "volume_bmesh_mm3": 174053.7,
+   "base_volume_bmesh_mm3": 179954.0,
+   "base_euler_char": -20,
+   "base_raw_signed_volume_mm3": 179958.06,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 179958.1,
+   "volume_change_mm3": -5904.4,
+   "bbox_shift_max_mm": 0.601
+  },
+  "R2": {
+   "volume_mm3": 2879.7,
+   "bbox": [
+    [
+     34.842,
+     -38.23,
+     13.744
+    ],
+    [
+     55.69,
+     -20.555,
+     36.78
+    ]
+   ],
+   "raw_signed_volume_mm3": 2879.66,
+   "outward_winding": true,
+   "verts": 465,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 1,
+   "closed_manifold": false,
+   "islands": 1,
+   "genus": 2.5,
+   "euler_char": -3,
+   "volume_bmesh_mm3": 2879.7,
+   "base_volume_bmesh_mm3": 2879.7,
+   "base_euler_char": -3,
+   "base_raw_signed_volume_mm3": 2879.66,
+   "base_nonmanifold_edges": 1,
+   "base_closed_manifold": false,
+   "base_empty": false,
+   "base_volume_mm3": 2879.7,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0,
+   "vertex_shift_max_mm": 0.0
+  },
+  "R4": {
+   "volume_mm3": 5195.5,
+   "bbox": [
+    [
+     37.015,
+     -62.442,
+     -1.205
+    ],
+    [
+     59.523,
+     -33.991,
+     36.692
+    ]
+   ],
+   "raw_signed_volume_mm3": 5195.46,
+   "outward_winding": true,
+   "verts": 729,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 1,
+   "closed_manifold": false,
+   "islands": 1,
+   "genus": 2.5,
+   "euler_char": -3,
+   "volume_bmesh_mm3": 5195.5,
+   "base_volume_bmesh_mm3": 5195.5,
+   "base_euler_char": -3,
+   "base_raw_signed_volume_mm3": 5195.46,
+   "base_nonmanifold_edges": 1,
+   "base_closed_manifold": false,
+   "base_empty": false,
+   "base_volume_mm3": 5195.5,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0,
+   "vertex_shift_max_mm": 0.0
+  },
+  "L2": {
+   "volume_mm3": 2879.7,
+   "bbox": [
+    [
+     -55.69,
+     -38.23,
+     13.744
+    ],
+    [
+     -34.842,
+     -20.555,
+     36.78
+    ]
+   ],
+   "raw_signed_volume_mm3": 2879.66,
+   "outward_winding": true,
+   "verts": 465,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 1,
+   "closed_manifold": false,
+   "islands": 1,
+   "genus": 2.5,
+   "euler_char": -3,
+   "volume_bmesh_mm3": 2879.7,
+   "base_volume_bmesh_mm3": 2879.7,
+   "base_euler_char": -3,
+   "base_raw_signed_volume_mm3": 2879.66,
+   "base_nonmanifold_edges": 1,
+   "base_closed_manifold": false,
+   "base_empty": false,
+   "base_volume_mm3": 2879.7,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0,
+   "vertex_shift_max_mm": 0.0
+  },
+  "L4": {
+   "volume_mm3": 5195.5,
+   "bbox": [
+    [
+     -59.523,
+     -62.442,
+     -1.205
+    ],
+    [
+     -37.015,
+     -33.991,
+     36.692
+    ]
+   ],
+   "raw_signed_volume_mm3": 5195.46,
+   "outward_winding": true,
+   "verts": 729,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 1,
+   "closed_manifold": false,
+   "islands": 1,
+   "genus": 2.5,
+   "euler_char": -3,
+   "volume_bmesh_mm3": 5195.5,
+   "base_volume_bmesh_mm3": 5195.5,
+   "base_euler_char": -3,
+   "base_raw_signed_volume_mm3": 5195.46,
+   "base_nonmanifold_edges": 1,
+   "base_closed_manifold": false,
+   "base_empty": false,
+   "base_volume_mm3": 5195.5,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0,
+   "vertex_shift_max_mm": 0.0
+  },
+  "R1": {
+   "volume_mm3": 1870.7,
+   "bbox": [
+    [
+     8.975,
+     -15.7,
+     35.319
+    ],
+    [
+     55.5,
+     -4.158,
+     47.639
+    ]
+   ],
+   "raw_signed_volume_mm3": 1870.7,
+   "outward_winding": true,
+   "verts": 364,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 1870.7,
+   "base_volume_bmesh_mm3": 1870.7,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 1870.7,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 1870.7,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0,
+   "vertex_shift_max_mm": 0.0
+  },
+  "L1": {
+   "volume_mm3": 1870.7,
+   "bbox": [
+    [
+     -55.5,
+     -15.7,
+     35.319
+    ],
+    [
+     -8.975,
+     -4.158,
+     47.639
+    ]
+   ],
+   "raw_signed_volume_mm3": 1870.7,
+   "outward_winding": true,
+   "verts": 364,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 1870.7,
+   "base_volume_bmesh_mm3": 1870.7,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 1870.7,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 1870.7,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0,
+   "vertex_shift_max_mm": 0.0
+  },
+  "case_middle_plate": {
+   "volume_mm3": 8473.9,
+   "bbox": [
+    [
+     -78.17,
+     -77.667,
+     30.757
+    ],
+    [
+     78.145,
+     -6.635,
+     41.6
+    ]
+   ],
+   "raw_signed_volume_mm3": 8473.91,
+   "outward_winding": true,
+   "verts": 23568,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 4.0,
+   "euler_char": -6,
+   "volume_bmesh_mm3": 8473.9,
+   "base_volume_bmesh_mm3": 8472.3,
+   "base_euler_char": -6,
+   "base_raw_signed_volume_mm3": 8472.25,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 8472.3,
+   "volume_change_mm3": 1.7,
+   "bbox_shift_max_mm": 0.011
+  },
+  "cable holder": {
+   "volume_mm3": 1422.8,
+   "bbox": [
+    [
+     -11.35,
+     -13.751,
+     29.41
+    ],
+    [
+     11.35,
+     2.687,
+     40.41
+    ]
+   ],
+   "raw_signed_volume_mm3": 1422.82,
+   "outward_winding": true,
+   "verts": 973,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 1.0,
+   "euler_char": 0,
+   "volume_bmesh_mm3": 1422.8,
+   "base_volume_bmesh_mm3": 1422.4,
+   "base_euler_char": 0,
+   "base_raw_signed_volume_mm3": 1422.39,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 1422.4,
+   "volume_change_mm3": 0.4,
+   "bbox_shift_max_mm": 0.0
+  },
+  "capacitive": {
+   "volume_mm3": 1030.3,
+   "bbox": [
+    [
+     43.3,
+     -36.7,
+     43.0
+    ],
+    [
+     54.7,
+     -25.3,
+     60.14
+    ]
+   ],
+   "raw_signed_volume_mm3": 1030.28,
+   "outward_winding": true,
+   "verts": 992,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 1.0,
+   "euler_char": 0,
+   "volume_bmesh_mm3": 1030.3,
+   "base_volume_bmesh_mm3": 1030.3,
+   "base_euler_char": 0,
+   "base_raw_signed_volume_mm3": 1030.28,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 1030.3,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "nut_lock": {
+   "volume_mm3": 102.5,
+   "bbox": [
+    [
+     19.55,
+     -11.051,
+     40.6
+    ],
+    [
+     22.55,
+     -5.349,
+     47.0
+    ]
+   ],
+   "raw_signed_volume_mm3": 102.47,
+   "outward_winding": true,
+   "verts": 28,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 102.5,
+   "base_volume_bmesh_mm3": 102.5,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 102.47,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 102.5,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "StickL": {
+   "volume_mm3": 1122.8,
+   "bbox": [
+    [
+     -33.868,
+     -62.868,
+     52.0
+    ],
+    [
+     -13.132,
+     -42.132,
+     66.242
+    ]
+   ],
+   "raw_signed_volume_mm3": 1122.8,
+   "outward_winding": true,
+   "verts": 9665,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 1122.6,
+   "base_volume_bmesh_mm3": 1122.6,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 1122.8,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 1122.8,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "abxy button": {
+   "volume_mm3": 633.9,
+   "bbox": [
+    [
+     57.759,
+     -34.84,
+     44.4
+    ],
+    [
+     64.241,
+     -27.16,
+     60.959
+    ]
+   ],
+   "raw_signed_volume_mm3": 633.93,
+   "outward_winding": true,
+   "verts": 108,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 633.9,
+   "base_volume_bmesh_mm3": 633.9,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 633.93,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 633.9,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "select cap down right": {
+   "volume_mm3": 111.1,
+   "bbox": [
+    [
+     15.52,
+     -35.48,
+     58.881
+    ],
+    [
+     24.48,
+     -26.52,
+     61.601
+    ]
+   ],
+   "raw_signed_volume_mm3": 111.12,
+   "outward_winding": true,
+   "verts": 1278,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 111.1,
+   "base_volume_bmesh_mm3": 111.1,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 111.12,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 111.1,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "abxy cap left": {
+   "volume_mm3": 180.8,
+   "bbox": [
+    [
+     31.3,
+     -36.7,
+     58.881
+    ],
+    [
+     42.7,
+     -25.3,
+     61.601
+    ]
+   ],
+   "raw_signed_volume_mm3": 180.76,
+   "outward_winding": true,
+   "verts": 2374,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 180.8,
+   "base_volume_bmesh_mm3": 180.8,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 180.76,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 180.8,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "home cap": {
+   "volume_mm3": 174.6,
+   "bbox": [
+    [
+     -5.462,
+     -57.843,
+     58.881
+    ],
+    [
+     5.462,
+     -46.157,
+     61.601
+    ]
+   ],
+   "raw_signed_volume_mm3": 174.6,
+   "outward_winding": true,
+   "verts": 2873,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 174.6,
+   "base_volume_bmesh_mm3": 174.6,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 174.6,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 174.6,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "abxy cap down": {
+   "volume_mm3": 180.3,
+   "bbox": [
+    [
+     43.3,
+     -48.7,
+     58.881
+    ],
+    [
+     54.7,
+     -37.3,
+     61.601
+    ]
+   ],
+   "raw_signed_volume_mm3": 180.31,
+   "outward_winding": true,
+   "verts": 2382,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 180.3,
+   "base_volume_bmesh_mm3": 180.3,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 180.31,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 180.3,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "dpad cap right": {
+   "volume_mm3": 144.1,
+   "bbox": [
+    [
+     -46.029,
+     -35.219,
+     58.881
+    ],
+    [
+     -34.143,
+     -26.781,
+     61.601
+    ]
+   ],
+   "raw_signed_volume_mm3": 144.06,
+   "outward_winding": true,
+   "verts": 1224,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 144.1,
+   "base_volume_bmesh_mm3": 144.1,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 144.06,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 144.1,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "abxy cap up": {
+   "volume_mm3": 181.4,
+   "bbox": [
+    [
+     43.3,
+     -24.7,
+     58.881
+    ],
+    [
+     54.7,
+     -13.3,
+     61.601
+    ]
+   ],
+   "raw_signed_volume_mm3": 181.4,
+   "outward_winding": true,
+   "verts": 2370,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 181.4,
+   "base_volume_bmesh_mm3": 181.4,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 181.4,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 181.4,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "abxy cap right": {
+   "volume_mm3": 180.4,
+   "bbox": [
+    [
+     55.3,
+     -36.7,
+     58.881
+    ],
+    [
+     66.7,
+     -25.3,
+     61.601
+    ]
+   ],
+   "raw_signed_volume_mm3": 180.42,
+   "outward_winding": true,
+   "verts": 2614,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "genus": 0.0,
+   "euler_char": 2,
+   "volume_bmesh_mm3": 180.4,
+   "base_volume_bmesh_mm3": 180.4,
+   "base_euler_char": 2,
+   "base_raw_signed_volume_mm3": 180.42,
+   "base_nonmanifold_edges": 0,
+   "base_closed_manifold": true,
+   "base_empty": false,
+   "base_volume_mm3": 180.4,
+   "volume_change_mm3": 0.0,
+   "bbox_shift_max_mm": 0.0
+  },
+  "rocker ball": {
+   "empty": true,
+   "base_empty": true
+  },
+  "rocker": {
+   "empty": true,
+   "base_empty": true
+  },
+  "dpad stick cap": {
+   "empty": true,
+   "base_empty": true
+  },
+  "rocker support": {
+   "empty": true,
+   "base_empty": true
+  },
+  "ball support": {
+   "empty": true,
+   "base_empty": true
+  },
+  "stick": {
+   "empty": true,
+   "base_empty": true
+  }
+ },
+ "settings": {
+  "subdivision level": "high",
+  "variant": "GripV",
+  "style": "dualsense",
+  "stock bumpers": false,
+  "top wire cutouts": false,
+  "R4 wire cutouts": false,
+  "body type": "standard",
+  "hollow top": true,
+  "voxel resolution": "low",
+  "ribs": true,
+  "fill type": "Gyroid",
+  "pillars": false,
+  "cable holder": true,
+  "horizontal buttons": true,
+  "button logo": true,
+  "marks": false,
+  "tolerance": "default",
+  "press tolerance": "default",
+  "cap tolerance": "default",
+  "screws": true,
+  "screws hollow": false
+ },
+ "stage_inputs": {
+  "Enable": true,
+  "View": 0,
+  "Hand Points": "hand points",
+  "Static Cutouts": "cutout flat",
+  "Voxel Size": 0.5,
+  "Fill Voxel Size": 1.0,
+  "Fine Band": 4,
+  "Wide Band": 16.0,
+  "Box Margin": 10.0,
+  "Press": 0.5,
+  "Edit Min X": 25.0,
+  "Mirror To Left": true,
+  "Min Island": 5000,
+  "Adaptivity": 0.0,
+  "Snap Mirror Seam": true,
+  "Shape": true,
+  "Shape Offset": "shape offset",
+  "Middle PIP Pull": 0.0,
+  "Touch Reach": 1.0,
+  "Top Clear": 3.0,
+  "Thenar Auto": true,
+  "Thenar Move": 6.0,
+  "Thenar Clearance": 0.8,
+  "Thenar Slope": 0.61087,
+  "Thenar Round": 6.0,
+  "Thenar Blend": 3.0,
+  "Thenar Min Z": 40.0,
+  "Thenar Hole R": [
+   34.0,
+   -52.0,
+   9.0
+  ],
+  "Thenar Hole L": [
+   -23.5,
+   -52.5,
+   9.0
+  ],
+  "Fit": 1.0,
+  "Shape Size": 34.0,
+  "Palm Give": 3.5,
+  "Finger Give": 1.5,
+  "Stroke Clear": 0.3,
+  "Screw Wall": 3.0,
+  "Thenar": true
+ },
+ "timing": {
+  "eval_s": 18.52,
+  "stage_s": 4.68,
+  "build_s": 0.74,
+  "open_s": 14.75
+ },
+ "R1L1_shift_mm": 0.0,
+ "case_top_summary": {
+  "volume_mm3": 34131.7,
+  "base_volume_mm3": 34386.8,
+  "top_verts_at_max_z": 2605,
+  "max_z": 59.03802,
+  "closed": true,
+  "islands": 2,
+  "volume_bmesh_mm3": 34131.8,
+  "base_volume_bmesh_mm3": 34383.7
+ },
+ "caps": "/tmp/claude-0/sdf/smooth/final/runs/v3_check/caps.json",
+ "skin": {
+  "volume_mm3": 426603.4,
+  "raw_signed_volume_mm3": 426603.4,
+  "outward_winding": true,
+  "contacts_mm": {
+   "middle root pad": 0.86,
+   "middle PIP": 5.43,
+   "ring root pad": -1.48,
+   "ring PIP": 3.41,
+   "pinky root pad": -2.2,
+   "pinky PIP": -2.94,
+   "pinky distal": -2.0,
+   "R2 fingertip": 0.52,
+   "R4 fingertip": 0.73,
+   "palm on swell": -3.37,
+   "index proximal": -1.54,
+   "index middle": 0.07,
+   "index distal": -0.62
+  },
+  "contacts_where": {
+   "middle root pad": [
+    79.9000015258789,
+    -52.0,
+    35.20000076293945
+   ],
+   "middle PIP": [
+    57.5,
+    -8.600000381469727,
+    31.399999618530273
+   ],
+   "ring root pad": [
+    79.80000305175781,
+    -58.900001525878906,
+    19.600000381469727
+   ],
+   "ring PIP": [
+    58.900001525878906,
+    -18.600000381469727,
+    10.600000381469727
+   ],
+   "pinky root pad": [
+    76.5,
+    -54.79999923706055,
+    2.9000000953674316
+   ],
+   "pinky PIP": [
+    63.70000076293945,
+    -33.900001525878906,
+    -5.400000095367432
+   ],
+   "pinky distal": [
+    56.0,
+    -44.099998474121094,
+    -6.800000190734863
+   ],
+   "R2 fingertip": [
+    37.900001525878906,
+    -27.100000381469727,
+    21.5
+   ],
+   "R4 fingertip": [
+    40.900001525878906,
+    -39.599998474121094,
+    7.199999809265137
+   ],
+   "palm on swell": [
+    81.9000015258789,
+    -70.9000015258789,
+    24.100000381469727
+   ],
+   "index proximal": [
+    62.599998474121094,
+    -11.899999618530273,
+    49.900001525878906
+   ],
+   "index middle": [
+    54.400001525878906,
+    -6.599999904632568,
+    46.400001525878906
+   ],
+   "index distal": [
+    22.100000381469727,
+    -4.300000190734863,
+    34.20000076293945
+   ]
+  },
+  "palm_mm": -3.37,
+  "dig_elsewhere": {
+   "max_dig_mm": 3.43,
+   "where": "pinky_middle",
+   "at": [
+    60.5,
+    -35.1,
+    -9.6
+   ],
+   "per_capsule_min_gap_outside_zones": {
+    "palm": 25.52,
+    "index_metacarpal": -2.63,
+    "index_proximal": 1000000000.0,
+    "index_middle": 1000000000.0,
+    "index_distal": 1000000000.0,
+    "middle_metacarpal": 1000000000.0,
+    "middle_proximal": 6.79,
+    "middle_middle": 2.95,
+    "middle_distal": 1000000000.0,
+    "ring_metacarpal": 1000000000.0,
+    "ring_proximal": 6.68,
+    "ring_middle": 0.24,
+    "ring_distal": 1000000000.0,
+    "pinky_metacarpal": 1000000000.0,
+    "pinky_proximal": 0.24,
+    "pinky_middle": -3.43,
+    "pinky_distal": 1000000000.0,
+    "thumb_metacarpal": 15.37,
+    "thumb_proximal": 6.31,
+    "thumb_distal": 6.04
+   },
+   "per_capsule_min_gap_all": {
+    "palm": 25.52,
+    "index_metacarpal": -2.63,
+    "index_proximal": -1.54,
+    "index_middle": 0.07,
+    "index_distal": -0.62,
+    "middle_metacarpal": -1.77,
+    "middle_proximal": 6.79,
+    "middle_middle": 2.74,
+    "middle_distal": 0.52,
+    "ring_metacarpal": -3.37,
+    "ring_proximal": 6.68,
+    "ring_middle": 0.24,
+    "ring_distal": 0.73,
+    "pinky_metacarpal": -2.71,
+    "pinky_proximal": 0.24,
+    "pinky_middle": -3.43,
+    "pinky_distal": -2.0,
+    "thumb_metacarpal": 15.37,
+    "thumb_proximal": 6.31,
+    "thumb_distal": 6.04
+   }
+  },
+  "topology": {
+   "verts": 218300,
+   "tris": 436596,
+   "boundary_edges": 0,
+   "nonmanifold_edges": 0,
+   "closed_manifold": true,
+   "islands": 1,
+   "island_sizes_top5": [
+    218300
+   ],
+   "euler_char": 2,
+   "genus": 0.0
+  },
+  "top_face": {
+   "max_z": 59.04002,
+   "max_z_ok": true,
+   "verts_at_max_z": 27566,
+   "tris_at_max_z": 54408,
+   "top_area_mm2": 6826.8,
+   "verts_above_59.04": 0,
+   "top_y_min": -62.25,
+   "top_y_max": -10.75,
+   "top_y_min_right": -62.25,
+   "top_y_min_left": -62.25
+  },
+  "battery_face": {
+   "verts_at_x0": 442,
+   "min_z_at_x0": 26.56,
+   "tris": 22444,
+   "area_mm2": 2841.5,
+   "ok": true
+  },
+  "bbox": [
+   [
+    -82.3,
+    -90.62,
+    -15.323
+   ],
+   [
+    82.3,
+    -4.158,
+    59.04
+   ]
+  ],
+  "max_y": -4.158,
+  "max_y_ok": true,
+  "wall_thickness_right_handle": {
+   "n": 52707,
+   "min": 3.7,
+   "min_at": [
+    30.4,
+    -76.9,
+    28.8
+   ],
+   "p1": 9.67,
+   "p5": 16.17,
+   "pct_verts_lt2": 0.0,
+   "pct_area_lt2": 0.0
+  },
+  "section_z40": {
+   "new": {
+    "n_segments": 2052,
+    "perimeter": 430.31,
+    "area_mm2": 10760.8,
+    "bbox": [
+     [
+      -81.24,
+      -81.82,
+      40.0
+     ],
+     [
+      81.24,
+      -4.16,
+      40.0
+     ]
+    ]
+   },
+   "base": {
+    "n_segments": 806,
+    "perimeter": 430.41,
+    "area_mm2": 10761.3,
+    "bbox": [
+     [
+      -81.25,
+      -81.83,
+      40.0
+     ],
+     [
+      81.25,
+      -4.16,
+      40.0
+     ]
+    ]
+   },
+   "max_dev_mm": 0.083,
+   "max_dev_at": [
+    52.0,
+    -81.7,
+    40.0
+   ],
+   "p99_dev_mm": 0.026,
+   "area_change_mm2": -0.5
+  },
+  "change_bands": {
+   "z-20..0": {
+    "grow_max": 0.39,
+    "carve_min": -2.03,
+    "n_changed": 11622,
+    "n": 13930
+   },
+   "z0..20": {
+    "grow_max": 0.82,
+    "carve_min": -2.06,
+    "n_changed": 37682,
+    "n": 50064
+   },
+   "z20..38": {
+    "grow_max": 0.78,
+    "carve_min": -1.52,
+    "n_changed": 29738,
+    "n": 70576
+   },
+   "z38..40": {
+    "grow_max": 0.0,
+    "carve_min": -0.01,
+    "n_changed": 0,
+    "n": 4880
+   },
+   "z40..44": {
+    "grow_max": 0.0,
+    "carve_min": -0.01,
+    "n_changed": 0,
+    "n": 9684
+   },
+   "z44..50": {
+    "grow_max": 0.0,
+    "carve_min": -0.2,
+    "n_changed": 90,
+    "n": 14869
+   },
+   "z50..56": {
+    "grow_max": 0.0,
+    "carve_min": -1.88,
+    "n_changed": 3367,
+    "n": 16242
+   },
+   "z56..58": {
+    "grow_max": 0.0,
+    "carve_min": -2.12,
+    "n_changed": 2002,
+    "n": 6041
+   },
+   "z58..59.1": {
+    "grow_max": 0.03,
+    "carve_min": -0.93,
+    "n_changed": 1238,
+    "n": 32014
+   }
+  },
+  "volume_change_mm3": -7162.4,
+  "change_range_mm": [
+   -2.12,
+   0.82
+  ],
+  "stick_cutout_clearance": {
+   "static: Stick R cutout appendix": {
+    "mm": 6.04,
+    "at": [
+     43.2,
+     -63.8,
+     58.9
+    ]
+   },
+   "static: Stick R cutout flat": {
+    "mm": 3.24,
+    "at": [
+     14.8,
+     -65.3,
+     58.4
+    ]
+   },
+   "static: StickL cutout flat": {
+    "mm": 2.58,
+    "at": [
+     -36.8,
+     -66.6,
+     57.5
+    ]
+   },
+   "dynamic: Stick R cutout": {
+    "mm": 3.63,
+    "at": [
+     8.2,
+     -63.8,
+     58.9
+    ]
+   },
+   "dynamic: Stick R hole": {
+    "mm": 2.76,
+    "at": [
+     33.8,
+     -63.8,
+     58.9
+    ]
+   },
+   "dynamic: StickL cutout": {
+    "mm": 3.27,
+    "at": [
+     -32.2,
+     -63.8,
+     58.9
+    ]
+   },
+   "dynamic: StickL hole": {
+    "mm": 2.25,
+    "at": [
+     -23.8,
+     -63.8,
+     58.9
+    ]
+   },
+   "_min": {
+    "mm": 2.25,
+    "cutout": "dynamic: StickL hole"
+   }
+  },
+  "triggers": {
+   "R2": {
+    "max_hand_overlap_mm": 0.5,
+    "worst_capsule": "middle_distal",
+    "overlapping_capsules": {
+     "middle_distal": 0.5
+    },
+    "fingertip_gap_to_part_mm": -0.5,
+    "press_face_center": [
+     39.15,
+     -25.13,
+     19.75
+    ],
+    "pad_to_press_face_center_gap_mm": -0.5,
+    "press_normal_vs_pad_direction_deg": 0.0,
+    "protrusion_out_of_skin_mm": 2.79,
+    "press_face_center_to_skin_signed_mm": 1.34
+   },
+   "R4": {
+    "max_hand_overlap_mm": 0.5,
+    "worst_capsule": "ring_distal",
+    "overlapping_capsules": {
+     "ring_distal": 0.5
+    },
+    "fingertip_gap_to_part_mm": -0.5,
+    "press_face_center": [
+     41.46,
+     -39.46,
+     4.49
+    ],
+    "pad_to_press_face_center_gap_mm": -0.5,
+    "press_normal_vs_pad_direction_deg": 0.2,
+    "protrusion_out_of_skin_mm": 3.26,
+    "press_face_center_to_skin_signed_mm": 1.57
+   }
+  },
+  "wrap_deg": {
+   "middle_proximal": 0,
+   "middle_middle": 0,
+   "middle_distal": 50,
+   "ring_proximal": 0,
+   "ring_middle": 60,
+   "ring_distal": 40,
+   "pinky_proximal": 40,
+   "pinky_middle": 130,
+   "pinky_distal": 130
+  },
+  "internal_clearance": {
+   "battery bool": {
+    "min_mm": -9.94,
+    "at": [
+     -18.7,
+     -79.7,
+     16.6
+    ],
+    "base_min_mm": -9.94,
+    "min_mm_where_inside_base": 0.02,
+    "base_min_mm_where_inside_base": 0.02,
+    "max_wall_loss_mm": 0.28,
+    "max_wall_loss_at": [
+     -4.8,
+     -61.1,
+     47.8
+    ]
+   },
+   "battery wire space": {
+    "min_mm": 1.03,
+    "at": [
+     -26.7,
+     -47.6,
+     31.6
+    ],
+    "base_min_mm": 1.04,
+    "min_mm_where_inside_base": 1.03,
+    "base_min_mm_where_inside_base": 1.04,
+    "max_wall_loss_mm": 0.02,
+    "max_wall_loss_at": [
+     27.3,
+     -49.0,
+     32.3
+    ]
+   },
+   "battery wire space.001": {
+    "min_mm": 2.15,
+    "at": [
+     27.2,
+     -52.4,
+     32.7
+    ],
+    "base_min_mm": 1.85,
+    "min_mm_where_inside_base": 2.15,
+    "base_min_mm_where_inside_base": 1.85,
+    "max_wall_loss_mm": 0.02,
+    "max_wall_loss_at": [
+     27.0,
+     -50.4,
+     38.0
+    ]
+   },
+   "corner relief": {
+    "min_mm": 9.25,
+    "at": [
+     -65.8,
+     -63.8,
+     42.1
+    ],
+    "base_min_mm": 9.25,
+    "min_mm_where_inside_base": 9.25,
+    "base_min_mm_where_inside_base": 9.25,
+    "max_wall_loss_mm": 0.0,
+    "max_wall_loss_at": [
+     -65.6,
+     -63.8,
+     40.1
+    ]
+   },
+   "cutout.004": {
+    "min_mm": null,
+    "note": "farther than 12.0 mm from the skin"
+   },
+   "hollow cutout": {
+    "min_mm": -1.02,
+    "at": [
+     22.8,
+     -56.3,
+     29.5
+    ],
+    "base_min_mm": -1.02,
+    "min_mm_where_inside_base": 0.01,
+    "base_min_mm_where_inside_base": 0.01,
+    "max_wall_loss_mm": 0.51,
+    "max_wall_loss_at": [
+     -49.8,
+     -20.2,
+     34.0
+    ]
+   },
+   "jst2p bool": {
+    "min_mm": 2.25,
+    "at": [
+     -26.5,
+     -21.2,
+     32.8
+    ],
+    "base_min_mm": 2.24,
+    "min_mm_where_inside_base": 2.25,
+    "base_min_mm_where_inside_base": 2.24,
+    "max_wall_loss_mm": -0.01,
+    "max_wall_loss_at": [
+     -26.5,
+     -21.2,
+     38.0
+    ]
+   },
+   "jst2p pass": {
+    "min_mm": 0.25,
+    "at": [
+     -16.3,
+     -49.0,
+     26.8
+    ],
+    "base_min_mm": 0.25,
+    "min_mm_where_inside_base": 0.25,
+    "base_min_mm_where_inside_base": 0.25,
+    "max_wall_loss_mm": 0.0,
+    "max_wall_loss_at": [
+     22.5,
+     -41.3,
+     33.0
+    ]
+   },
+   "marmota cutout": {
+    "min_mm": 4.78,
+    "at": [
+     -16.4,
+     -63.2,
+     31.7
+    ],
+    "base_min_mm": 4.52,
+    "min_mm_where_inside_base": 4.78,
+    "base_min_mm_where_inside_base": 4.52,
+    "max_wall_loss_mm": 0.05,
+    "max_wall_loss_at": [
+     2.8,
+     -63.5,
+     43.5
+    ]
+   },
+   "middle pillars": {
+    "min_mm": 7.03,
+    "at": [
+     13.1,
+     -39.0,
+     33.6
+    ],
+    "base_min_mm": 7.03,
+    "min_mm_where_inside_base": 7.03,
+    "base_min_mm_where_inside_base": 7.03,
+    "max_wall_loss_mm": 0.0,
+    "max_wall_loss_at": [
+     13.3,
+     -38.1,
+     34.9
+    ]
+   },
+   "middle supports": {
+    "min_mm": -0.04,
+    "at": [
+     16.0,
+     -80.6,
+     37.9
+    ],
+    "base_min_mm": -0.04,
+    "min_mm_where_inside_base": 0.07,
+    "base_min_mm_where_inside_base": 0.07,
+    "max_wall_loss_mm": 0.01,
+    "max_wall_loss_at": [
+     -15.4,
+     -77.9,
+     35.1
+    ]
+   },
+   "pcb cutout": {
+    "min_mm": 5.34,
+    "at": [
+     -43.4,
+     -15.5,
+     36.2
+    ],
+    "base_min_mm": 5.6,
+    "min_mm_where_inside_base": 5.34,
+    "base_min_mm_where_inside_base": 5.6,
+    "max_wall_loss_mm": 0.45,
+    "max_wall_loss_at": [
+     49.3,
+     -19.3,
+     36.2
+    ]
+   },
+   "screw bools": {
+    "min_mm": -12.26,
+    "at": [
+     -73.8,
+     -62.1,
+     -16.9
+    ],
+    "base_min_mm": -12.03,
+    "min_mm_where_inside_base": 0.02,
+    "base_min_mm_where_inside_base": 0.02,
+    "max_wall_loss_mm": 0.97,
+    "max_wall_loss_at": [
+     -69.6,
+     -60.2,
+     24.2
+    ]
+   },
+   "side pillars": {
+    "min_mm": 7.53,
+    "at": [
+     34.6,
+     -39.0,
+     33.5
+    ],
+    "base_min_mm": 7.19,
+    "min_mm_where_inside_base": 7.53,
+    "base_min_mm_where_inside_base": 7.19,
+    "max_wall_loss_mm": -0.21,
+    "max_wall_loss_at": [
+     39.3,
+     -42.1,
+     33.5
+    ]
+   },
+   "wire bool": {
+    "min_mm": null,
+    "note": "farther than 12.0 mm from the skin"
+   },
+   "wire bool 2": {
+    "min_mm": null,
+    "note": "farther than 12.0 mm from the skin"
+   }
+  },
+  "seconds": 9.7
+ },
+ "summary": "contacts +0.86 +5.43 -1.48 +3.41 -2.20 -2.94 -2.00 palm -3.37 | dig 3.43 (pinky_middle) | genus 0 islands 1 | thin<2mm 0.0% p1 9.67 | top 27566 verts @ 59.04002 | maxY -4.158",
+ "smooth": {
+  "change_vs_nofit": {
+   "edited_verts": 32932,
+   "edited_area_mm2": 5471.9,
+   "grow_max_mm": 0.82,
+   "recede_max_mm": 2.07,
+   "grow_max_at": [
+    36.5,
+    -57.0,
+    12.5
+   ],
+   "recede_max_at": [
+    67.3,
+    -32.8,
+    3.8
+   ],
+   "frozen_max_change_mm": 0.0,
+   "frozen_max_change_at": [
+    28.8,
+    -4.6,
+    33.8
+   ],
+   "edited_outside_handle_verts": 0,
+   "edited_bbox": [
+    [
+     28.1,
+     -88.2,
+     -13.4
+    ],
+    [
+     82.3,
+     -8.2,
+     32.7
+    ]
+   ],
+   "unchanged_design_feature_verts_excluded": 5172
+  },
+  "smoothness": {
+   "handle_below_z40": {
+    "n": 57959,
+    "area_mm2": 9842.8,
+    "min_concave_radius_mm": 1.35,
+    "min_concave_radius_at": [
+     27.8,
+     -41.2,
+     30.3
+    ],
+    "concave_radius_p0.5_mm": 1.95,
+    "concave_radius_p2_mm": 3.38,
+    "pct_area_concave_r_lt12": 9.17,
+    "pct_area_concave_r_lt8": 5.67,
+    "area_concave_r_lt12_mm2": 902.5,
+    "area_concave_r_lt8_mm2": 558.6,
+    "min_convex_radius_mm": 0.62,
+    "min_convex_radius_at": [
+     27.8,
+     -77.7,
+     29.2
+    ],
+    "convex_radius_p0.5_mm": 1.59,
+    "max_normal_turn_deg_per_mm": 70.02,
+    "max_normal_turn_at": [
+     26.3,
+     -77.8,
+     29.9
+    ],
+    "normal_turn_p99_deg_per_mm": 38.93,
+    "normal_turn_p99.9_deg_per_mm": 59.74,
+    "max_concave_turn_deg_per_mm": 45.58,
+    "max_concave_turn_at": [
+     27.2,
+     -38.8,
+     30.5
+    ],
+    "concave_turn_p99_deg_per_mm": 33.38,
+    "max_convex_turn_deg_per_mm": 70.02,
+    "max_convex_turn_at": [
+     26.3,
+     -77.8,
+     29.9
+    ],
+    "convex_turn_p99_deg_per_mm": 36.14
+   },
+   "edited": {
+    "n": 32932,
+    "area_mm2": 5471.9,
+    "min_concave_radius_mm": 2.01,
+    "min_concave_radius_at": [
+     42.3,
+     -16.3,
+     30.7
+    ],
+    "concave_radius_p0.5_mm": 2.78,
+    "concave_radius_p2_mm": 8.14,
+    "pct_area_concave_r_lt12": 4.31,
+    "pct_area_concave_r_lt8": 1.94,
+    "area_concave_r_lt12_mm2": 236.0,
+    "area_concave_r_lt8_mm2": 106.1,
+    "min_convex_radius_mm": 0.74,
+    "min_convex_radius_at": [
+     29.7,
+     -76.7,
+     27.7
+    ],
+    "convex_radius_p0.5_mm": 1.53,
+    "max_normal_turn_deg_per_mm": 61.69,
+    "max_normal_turn_at": [
+     29.1,
+     -77.5,
+     28.9
+    ],
+    "normal_turn_p99_deg_per_mm": 36.95,
+    "normal_turn_p99.9_deg_per_mm": 50.09,
+    "max_concave_turn_deg_per_mm": 41.07,
+    "max_concave_turn_at": [
+     28.1,
+     -38.8,
+     29.2
+    ],
+    "concave_turn_p99_deg_per_mm": 26.13,
+    "max_convex_turn_deg_per_mm": 61.69,
+    "max_convex_turn_at": [
+     29.1,
+     -77.5,
+     28.9
+    ],
+    "convex_turn_p99_deg_per_mm": 36.74
+   },
+   "edited_plus_3mm": {
+    "n": 44962,
+    "area_mm2": 7512.7,
+    "min_concave_radius_mm": 1.35,
+    "min_concave_radius_at": [
+     27.8,
+     -41.2,
+     30.3
+    ],
+    "concave_radius_p0.5_mm": 2.11,
+    "concave_radius_p2_mm": 4.24,
+    "pct_area_concave_r_lt12": 7.23,
+    "pct_area_concave_r_lt8": 4.27,
+    "area_concave_r_lt12_mm2": 543.0,
+    "area_concave_r_lt8_mm2": 320.6,
+    "min_convex_radius_mm": 0.62,
+    "min_convex_radius_at": [
+     27.8,
+     -77.7,
+     29.2
+    ],
+    "convex_radius_p0.5_mm": 1.53,
+    "max_normal_turn_deg_per_mm": 70.02,
+    "max_normal_turn_at": [
+     26.3,
+     -77.8,
+     29.9
+    ],
+    "normal_turn_p99_deg_per_mm": 39.6,
+    "normal_turn_p99.9_deg_per_mm": 58.66,
+    "max_concave_turn_deg_per_mm": 45.58,
+    "max_concave_turn_at": [
+     27.2,
+     -38.8,
+     30.5
+    ],
+    "concave_turn_p99_deg_per_mm": 33.17,
+    "max_convex_turn_deg_per_mm": 70.02,
+    "max_convex_turn_at": [
+     26.3,
+     -77.8,
+     29.9
+    ],
+    "convex_turn_p99_deg_per_mm": 37.16
+   },
+   "edited_plus_3mm_excl_unchanged_features": {
+    "n": 39790,
+    "area_mm2": 6626.9,
+    "min_concave_radius_mm": 2.01,
+    "min_concave_radius_at": [
+     42.3,
+     -16.3,
+     30.7
+    ],
+    "concave_radius_p0.5_mm": 2.98,
+    "concave_radius_p2_mm": 8.69,
+    "pct_area_concave_r_lt12": 3.56,
+    "pct_area_concave_r_lt8": 1.6,
+    "area_concave_r_lt12_mm2": 236.0,
+    "area_concave_r_lt8_mm2": 106.1,
+    "min_convex_radius_mm": 0.74,
+    "min_convex_radius_at": [
+     29.7,
+     -76.7,
+     27.7
+    ],
+    "convex_radius_p0.5_mm": 1.59,
+    "max_normal_turn_deg_per_mm": 61.69,
+    "max_normal_turn_at": [
+     29.1,
+     -77.5,
+     28.9
+    ],
+    "normal_turn_p99_deg_per_mm": 36.18,
+    "normal_turn_p99.9_deg_per_mm": 48.73,
+    "max_concave_turn_deg_per_mm": 41.07,
+    "max_concave_turn_at": [
+     28.1,
+     -38.8,
+     29.2
+    ],
+    "concave_turn_p99_deg_per_mm": 24.28,
+    "max_convex_turn_deg_per_mm": 61.69,
+    "max_convex_turn_at": [
+     29.1,
+     -77.5,
+     28.9
+    ],
+    "convex_turn_p99_deg_per_mm": 36.03
+   },
+   "edited (no-fit baseline, same footprint)": {
+    "n": 33514,
+    "area_mm2": 5610.5,
+    "min_concave_radius_mm": 1.79,
+    "min_concave_radius_at": [
+     41.9,
+     -16.4,
+     30.5
+    ],
+    "concave_radius_p0.5_mm": 2.7,
+    "concave_radius_p2_mm": 8.62,
+    "pct_area_concave_r_lt12": 3.8,
+    "pct_area_concave_r_lt8": 1.74,
+    "area_concave_r_lt12_mm2": 213.1,
+    "area_concave_r_lt8_mm2": 97.6,
+    "min_convex_radius_mm": 0.66,
+    "min_convex_radius_at": [
+     29.8,
+     -76.6,
+     27.9
+    ],
+    "convex_radius_p0.5_mm": 1.49,
+    "max_normal_turn_deg_per_mm": 63.3,
+    "max_normal_turn_at": [
+     29.9,
+     -76.9,
+     28.8
+    ],
+    "normal_turn_p99_deg_per_mm": 39.83,
+    "normal_turn_p99.9_deg_per_mm": 56.42,
+    "max_concave_turn_deg_per_mm": 39.13,
+    "max_concave_turn_at": [
+     64.2,
+     -17.8,
+     29.8
+    ],
+    "concave_turn_p99_deg_per_mm": 27.02,
+    "max_convex_turn_deg_per_mm": 63.3,
+    "max_convex_turn_at": [
+     29.9,
+     -76.9,
+     28.8
+    ],
+    "convex_turn_p99_deg_per_mm": 39.83
+   },
+   "edited_plus_3mm (no-fit baseline, same footprint)": {
+    "n": 45525,
+    "area_mm2": 7662.3,
+    "min_concave_radius_mm": 1.44,
+    "min_concave_radius_at": [
+     27.8,
+     -36.2,
+     30.3
+    ],
+    "concave_radius_p0.5_mm": 1.93,
+    "concave_radius_p2_mm": 4.35,
+    "pct_area_concave_r_lt12": 6.75,
+    "pct_area_concave_r_lt8": 3.81,
+    "area_concave_r_lt12_mm2": 517.4,
+    "area_concave_r_lt8_mm2": 292.0,
+    "min_convex_radius_mm": 0.58,
+    "min_convex_radius_at": [
+     27.8,
+     -77.7,
+     29.3
+    ],
+    "convex_radius_p0.5_mm": 1.53,
+    "max_normal_turn_deg_per_mm": 71.85,
+    "max_normal_turn_at": [
+     27.3,
+     -77.2,
+     29.4
+    ],
+    "normal_turn_p99_deg_per_mm": 40.56,
+    "normal_turn_p99.9_deg_per_mm": 61.79,
+    "max_concave_turn_deg_per_mm": 42.36,
+    "max_concave_turn_at": [
+     27.5,
+     -37.2,
+     30.5
+    ],
+    "concave_turn_p99_deg_per_mm": 34.49,
+    "max_convex_turn_deg_per_mm": 71.85,
+    "max_convex_turn_at": [
+     27.3,
+     -77.2,
+     29.4
+    ],
+    "convex_turn_p99_deg_per_mm": 39.45
+   }
+  },
+  "zone_support": {
+   "middle root pad": {
+    "min_gap_mm": 0.86,
+    "penetration_mm": 0.0,
+    "support_pct": 8.7,
+    "supported_mm": 2.9,
+    "zone_axis_mm": 33.6,
+    "mean_gap_supported_mm": 1.15,
+    "deepest_at_surface": [
+     79.9000015258789,
+     -52.0,
+     35.20000076293945
+    ],
+    "deepest_at_axis": [
+     95.0,
+     -48.6,
+     35.6
+    ],
+    "penetration_ok": false
+   },
+   "middle PIP": {
+    "min_gap_mm": 5.43,
+    "penetration_mm": 0.0,
+    "support_pct": 0.0,
+    "supported_mm": 0.0,
+    "zone_axis_mm": 10.6,
+    "mean_gap_supported_mm": null,
+    "deepest_at_surface": [
+     57.5,
+     -8.600000381469727,
+     31.399999618530273
+    ],
+    "deepest_at_axis": [
+     60.9,
+     0.3,
+     21.4
+    ],
+    "penetration_ok": false
+   },
+   "ring root pad": {
+    "min_gap_mm": -1.48,
+    "penetration_mm": 1.48,
+    "support_pct": 39.5,
+    "supported_mm": 12.2,
+    "zone_axis_mm": 31.0,
+    "mean_gap_supported_mm": -0.08,
+    "deepest_at_surface": [
+     79.80000305175781,
+     -58.900001525878906,
+     19.600000381469727
+    ],
+    "deepest_at_axis": [
+     92.6,
+     -55.9,
+     19.1
+    ],
+    "penetration_ok": false
+   },
+   "ring PIP": {
+    "min_gap_mm": 3.41,
+    "penetration_mm": 0.0,
+    "support_pct": 0.0,
+    "supported_mm": 0.0,
+    "zone_axis_mm": 10.7,
+    "mean_gap_supported_mm": null,
+    "deepest_at_surface": [
+     58.900001525878906,
+     -18.600000381469727,
+     10.600000381469727
+    ],
+    "deepest_at_axis": [
+     62.5,
+     -10.8,
+     3.1
+    ],
+    "penetration_ok": false
+   },
+   "pinky root pad": {
+    "min_gap_mm": -2.2,
+    "penetration_mm": 2.2,
+    "support_pct": 63.7,
+    "supported_mm": 16.6,
+    "zone_axis_mm": 26.0,
+    "mean_gap_supported_mm": -1.57,
+    "deepest_at_surface": [
+     76.5,
+     -54.79999923706055,
+     2.9000000953674316
+    ],
+    "deepest_at_axis": [
+     88.2,
+     -55.7,
+     -1.1
+    ],
+    "penetration_ok": false
+   },
+   "pinky PIP": {
+    "min_gap_mm": -2.94,
+    "penetration_mm": 2.94,
+    "support_pct": 100.0,
+    "supported_mm": 7.9,
+    "zone_axis_mm": 7.9,
+    "mean_gap_supported_mm": -1.09,
+    "deepest_at_surface": [
+     63.70000076293945,
+     -33.900001525878906,
+     -5.400000095367432
+    ],
+    "deepest_at_axis": [
+     64.5,
+     -32.5,
+     -9.0
+    ],
+    "penetration_ok": false
+   },
+   "pinky distal": {
+    "min_gap_mm": -2.0,
+    "penetration_mm": 2.0,
+    "support_pct": 100.0,
+    "supported_mm": 17.7,
+    "zone_axis_mm": 17.7,
+    "mean_gap_supported_mm": -1.81,
+    "deepest_at_surface": [
+     56.0,
+     -44.099998474121094,
+     -6.800000190734863
+    ],
+    "deepest_at_axis": [
+     52.8,
+     -43.5,
+     -9.5
+    ],
+    "penetration_ok": false
+   },
+   "R2 fingertip": {
+    "min_gap_mm": 0.52,
+    "penetration_mm": 0.0,
+    "support_pct": 68.3,
+    "supported_mm": 13.7,
+    "zone_axis_mm": 20.1,
+    "mean_gap_supported_mm": 0.92,
+    "deepest_at_surface": [
+     37.900001525878906,
+     -27.100000381469727,
+     21.5
+    ],
+    "deepest_at_axis": [
+     33.2,
+     -21.6,
+     18.2
+    ],
+    "penetration_ok": false
+   },
+   "R4 fingertip": {
+    "min_gap_mm": 0.73,
+    "penetration_mm": 0.0,
+    "support_pct": 24.4,
+    "supported_mm": 5.0,
+    "zone_axis_mm": 20.4,
+    "mean_gap_supported_mm": 1.03,
+    "deepest_at_surface": [
+     40.900001525878906,
+     -39.599998474121094,
+     7.199999809265137
+    ],
+    "deepest_at_axis": [
+     36.7,
+     -35.9,
+     2.0
+    ],
+    "penetration_ok": false
+   },
+   "palm on swell": {
+    "min_gap_mm": -3.37,
+    "penetration_mm": 3.37,
+    "support_pct": 49.1,
+    "supported_mm": 118.4,
+    "zone_axis_mm": 241.3,
+    "mean_gap_supported_mm": -1.37,
+    "deepest_at_surface": [
+     81.9000015258789,
+     -70.9000015258789,
+     24.100000381469727
+    ],
+    "deepest_at_axis": [
+     93.1,
+     -70.9,
+     22.8
+    ],
+    "penetration_ok": false
+   },
+   "index proximal": {
+    "min_gap_mm": -1.54,
+    "penetration_mm": 1.54,
+    "support_pct": 57.6,
+    "supported_mm": 24.4,
+    "zone_axis_mm": 42.4,
+    "mean_gap_supported_mm": -0.61,
+    "deepest_at_surface": [
+     62.599998474121094,
+     -11.899999618530273,
+     49.900001525878906
+    ],
+    "deepest_at_axis": [
+     68.3,
+     -6.9,
+     51.0
+    ],
+    "penetration_ok": false
+   },
+   "index middle": {
+    "min_gap_mm": 0.07,
+    "penetration_mm": 0.0,
+    "support_pct": 73.5,
+    "supported_mm": 17.9,
+    "zone_axis_mm": 24.3,
+    "mean_gap_supported_mm": 0.51,
+    "deepest_at_surface": [
+     54.400001525878906,
+     -6.599999904632568,
+     46.400001525878906
+    ],
+    "deepest_at_axis": [
+     56.2,
+     1.4,
+     46.5
+    ],
+    "penetration_ok": false
+   },
+   "index distal": {
+    "min_gap_mm": -0.62,
+    "penetration_mm": 0.62,
+    "support_pct": 52.5,
+    "supported_mm": 10.4,
+    "zone_axis_mm": 19.8,
+    "mean_gap_supported_mm": 0.11,
+    "deepest_at_surface": [
+     22.100000381469727,
+     -4.300000190734863,
+     34.20000076293945
+    ],
+    "deepest_at_axis": [
+     22.1,
+     2.3,
+     33.4
+    ],
+    "penetration_ok": true
+   }
+  },
+  "max_dig": {
+   "per_capsule_min_gap_mm": {
+    "palm": 25.52,
+    "index_metacarpal": -2.63,
+    "index_proximal": -1.54,
+    "index_middle": 0.07,
+    "index_distal": -0.62,
+    "middle_metacarpal": -1.77,
+    "middle_proximal": 6.79,
+    "middle_middle": 2.74,
+    "middle_distal": 0.52,
+    "ring_metacarpal": -3.37,
+    "ring_proximal": 6.68,
+    "ring_middle": 0.24,
+    "ring_distal": 0.73,
+    "pinky_metacarpal": -2.71,
+    "pinky_proximal": 0.24,
+    "pinky_middle": -3.43,
+    "pinky_distal": -2.0,
+    "thumb_metacarpal": 15.37,
+    "thumb_proximal": 6.31,
+    "thumb_distal": 6.04
+   },
+   "max_dig_editable_mm": 3.43,
+   "max_dig_editable_capsule": "pinky_middle",
+   "max_dig_editable_at": [
+    60.70000076293945,
+    -36.099998474121094,
+    -6.300000190734863
+   ],
+   "max_dig_frozen_mm": 2.63,
+   "max_dig_frozen_capsule": "index_metacarpal",
+   "max_dig_frozen_at": [
+    79.5,
+    -58.79999923706055,
+    46.400001525878906
+   ],
+   "max_dig_mm": 3.43
+  },
+  "seats": {
+   "R2": {
+    "seat_plane_point": [
+     39.288,
+     -25.268,
+     19.797
+    ],
+    "normal": [
+     -0.70517,
+     0.67487,
+     -0.21746
+    ],
+    "rim_radius_mm": 2.5,
+    "skin_at_press_center_signed_mm": 1.337,
+    "target_skin_at_press_center_mm": 0.2,
+    "opening_extent_mm": 9.53,
+    "opening_segments": 84,
+    "rim_verts": 1101,
+    "rim_dev_mean_mm": -1.449,
+    "rim_dev_max_abs_mm": 5.333,
+    "rim_dev_p95_abs_mm": 4.632,
+    "rim_dev_min_mm": -5.333,
+    "rim_dev_max_mm": 1.316,
+    "rim_worst_at": [
+     44.5,
+     -30.0,
+     12.5
+    ]
+   },
+   "R4": {
+    "seat_plane_point": [
+     41.607,
+     -39.566,
+     4.563
+    ],
+    "normal": [
+     -0.74075,
+     0.55549,
+     -0.37778
+    ],
+    "rim_radius_mm": 2.5,
+    "skin_at_press_center_signed_mm": 1.574,
+    "target_skin_at_press_center_mm": 0.2,
+    "opening_extent_mm": 9.66,
+    "opening_segments": 76,
+    "rim_verts": 1033,
+    "rim_dev_mean_mm": -2.812,
+    "rim_dev_max_abs_mm": 7.984,
+    "rim_dev_p95_abs_mm": 7.366,
+    "rim_dev_min_mm": -7.984,
+    "rim_dev_max_mm": 1.598,
+    "rim_worst_at": [
+     44.1,
+     -51.4,
+     3.5
+    ]
+   }
+  },
+  "seconds": 13.7,
+  "reference": {
+   "plain GripV handle_below_z40": {
+    "n": 12563,
+    "area_mm2": 10031.2,
+    "min_concave_radius_mm": 0.88,
+    "min_concave_radius_at": [
+     27.8,
+     -35.8,
+     30.6
+    ],
+    "concave_radius_p0.5_mm": 1.62,
+    "concave_radius_p2_mm": 3.93,
+    "pct_area_concave_r_lt12": 7.67,
+    "pct_area_concave_r_lt8": 4.41,
+    "area_concave_r_lt12_mm2": 769.1,
+    "area_concave_r_lt8_mm2": 442.0,
+    "min_convex_radius_mm": 0.6,
+    "min_convex_radius_at": [
+     27.5,
+     -78.0,
+     29.4
+    ],
+    "convex_radius_p0.5_mm": 1.52,
+    "max_normal_turn_deg_per_mm": 75.9,
+    "max_normal_turn_at": [
+     26.6,
+     -78.8,
+     30.3
+    ],
+    "normal_turn_p99_deg_per_mm": 43.27,
+    "normal_turn_p99.9_deg_per_mm": 62.3,
+    "max_concave_turn_deg_per_mm": 62.3,
+    "max_concave_turn_at": [
+     27.5,
+     -37.9,
+     30.6
+    ],
+    "concave_turn_p99_deg_per_mm": 39.49,
+    "max_convex_turn_deg_per_mm": 75.9,
+    "max_convex_turn_at": [
+     26.6,
+     -78.8,
+     30.3
+    ],
+    "convex_turn_p99_deg_per_mm": 38.28
+   },
+   "no-fit baseline handle_below_z40": {
+    "n": 58491,
+    "area_mm2": 9992.9,
+    "min_concave_radius_mm": 1.44,
+    "min_concave_radius_at": [
+     27.8,
+     -36.2,
+     30.3
+    ],
+    "concave_radius_p0.5_mm": 1.9,
+    "concave_radius_p2_mm": 3.28,
+    "pct_area_concave_r_lt12": 8.76,
+    "pct_area_concave_r_lt8": 5.22,
+    "area_concave_r_lt12_mm2": 875.0,
+    "area_concave_r_lt8_mm2": 522.0,
+    "min_convex_radius_mm": 0.58,
+    "min_convex_radius_at": [
+     27.8,
+     -77.7,
+     29.3
+    ],
+    "convex_radius_p0.5_mm": 1.65,
+    "max_normal_turn_deg_per_mm": 71.85,
+    "max_normal_turn_at": [
+     27.3,
+     -77.2,
+     29.4
+    ],
+    "normal_turn_p99_deg_per_mm": 39.55,
+    "normal_turn_p99.9_deg_per_mm": 61.33,
+    "max_concave_turn_deg_per_mm": 42.36,
+    "max_concave_turn_at": [
+     27.5,
+     -37.2,
+     30.5
+    ],
+    "concave_turn_p99_deg_per_mm": 34.47,
+    "max_convex_turn_deg_per_mm": 71.85,
+    "max_convex_turn_at": [
+     27.3,
+     -77.2,
+     29.4
+    ],
+    "convex_turn_p99_deg_per_mm": 37.52
+   }
+  },
+  "vs_nofit": {
+   "section_z40": {
+    "new": {
+     "n_segments": 2052,
+     "perimeter": 430.31,
+     "area_mm2": 10760.8,
+     "bbox": [
+      [
+       -81.24,
+       -81.82,
+       40.0
+      ],
+      [
+       81.24,
+       -4.16,
+       40.0
+      ]
+     ]
+    },
+    "base": {
+     "n_segments": 2052,
+     "perimeter": 430.31,
+     "area_mm2": 10760.8,
+     "bbox": [
+      [
+       -81.24,
+       -81.82,
+       40.0
+      ],
+      [
+       81.24,
+       -4.16,
+       40.0
+      ]
+     ]
+    },
+    "max_dev_mm": 0.0,
+    "max_dev_at": [
+     -80.2,
+     -68.2,
+     40.0
+    ],
+    "p99_dev_mm": 0.0,
+    "area_change_mm2": 0.0
+   },
+   "top_face": {
+    "max_z": [
+     59.04002,
+     59.04002
+    ],
+    "verts_at_max_z": [
+     27566,
+     27566
+    ],
+    "tris_at_max_z": [
+     54408,
+     54408
+    ],
+    "top_area_mm2": [
+     6826.8,
+     6826.8
+    ],
+    "top_y_min": [
+     -62.25,
+     -62.25
+    ],
+    "verts_above_59.04": [
+     0,
+     0
+    ]
+   },
+   "bbox_min_shift_mm": 0.596,
+   "bbox_min_yz_shift_mm": 0.0001,
+   "bbox_x_shift_mm": 0.596,
+   "bbox_min": [
+    -82.3001,
+    -90.6202,
+    -15.3228
+   ],
+   "bbox_min_nofit": [
+    -82.8961,
+    -90.6202,
+    -15.3229
+   ],
+   "bbox_max_shift_mm": 0.596,
+   "max_y": [
+    -4.1581,
+    -4.1581
+   ],
+   "volume_change_mm3": -6087.9,
+   "case_top_volume_change_mm3": 0.1,
+   "case_top_top_verts": [
+    2605,
+    2605
+   ],
+   "case_middle_plate_volume_change_mm3": -0.3,
+   "case_middle_plate_bbox_shift_mm": 0.004,
+   "case_top_dev": {
+    "to_ref": {
+     "max_mm": 0.0118,
+     "at": [
+      -57.63,
+      -11.48,
+      40.38
+     ],
+     "n_gt_0.01": 3
+    },
+    "from_ref": {
+     "max_mm": 0.0119,
+     "at": [
+      -58.33,
+      -11.94,
+      40.0
+     ],
+     "n_gt_0.01": 38
+    },
+    "max_mm": 0.0119
+   }
+  }
+ },
+ "acceptance": {
+  "contact middle root pad: penetration mm": {
+   "value": 0.0,
+   "limit": "0.2..1.0 (target 0.5)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "support middle root pad: % of zone within 1.5 mm": {
+   "value": 8.7,
+   "limit": ">= 50",
+   "pass": false,
+   "kind": "soft"
+  },
+  "contact middle PIP: penetration mm": {
+   "value": 0.0,
+   "limit": "0.2..1.0 (target 0.5)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "support middle PIP: % of zone within 1.5 mm": {
+   "value": 0.0,
+   "limit": ">= 50",
+   "pass": false,
+   "kind": "soft"
+  },
+  "contact ring root pad: penetration mm": {
+   "value": 1.48,
+   "limit": "0.2..1.0 (target 0.5)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "support ring root pad: % of zone within 1.5 mm": {
+   "value": 39.5,
+   "limit": ">= 50",
+   "pass": false,
+   "kind": "soft"
+  },
+  "contact ring PIP: penetration mm": {
+   "value": 0.0,
+   "limit": "0.2..1.0 (target 0.5)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "support ring PIP: % of zone within 1.5 mm": {
+   "value": 0.0,
+   "limit": ">= 50",
+   "pass": false,
+   "kind": "soft"
+  },
+  "contact pinky root pad: penetration mm": {
+   "value": 2.2,
+   "limit": "0.2..1.0 (target 0.5)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "support pinky root pad: % of zone within 1.5 mm": {
+   "value": 63.7,
+   "limit": ">= 50",
+   "pass": true,
+   "kind": "soft"
+  },
+  "contact pinky PIP: penetration mm": {
+   "value": 2.94,
+   "limit": "0.2..1.0 (target 0.5)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "support pinky PIP: % of zone within 1.5 mm": {
+   "value": 100.0,
+   "limit": ">= 50",
+   "pass": true,
+   "kind": "soft"
+  },
+  "contact pinky distal: penetration mm": {
+   "value": 2.0,
+   "limit": "0.2..1.0 (target 0.5)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "contact palm on swell: penetration mm": {
+   "value": 3.37,
+   "limit": "0.2..1.0 (target 0.5)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "support palm on swell: % of zone within 1.5 mm": {
+   "value": 49.1,
+   "limit": ">= 50",
+   "pass": false,
+   "kind": "soft"
+  },
+  "max dig, editable region mm": {
+   "value": 3.43,
+   "limit": "<= 1.0",
+   "pass": false,
+   "kind": "hard"
+  },
+  "max dig, frozen region mm (info: the shape cannot change it)": {
+   "value": 2.63,
+   "limit": "info",
+   "pass": null,
+   "kind": "info"
+  },
+  "edited_plus_3mm_excl_unchanged_features: % area concave R < 8 mm": {
+   "value": 1.6,
+   "limit": "<= 0.5",
+   "pass": false,
+   "kind": "hard"
+  },
+  "edited_plus_3mm_excl_unchanged_features: % area concave R < 12 mm": {
+   "value": 3.56,
+   "limit": "<= 5.0",
+   "pass": true,
+   "kind": "hard"
+  },
+  "edited_plus_3mm_excl_unchanged_features: concave radius p0.5 mm": {
+   "value": 2.98,
+   "limit": ">= 8.0",
+   "pass": false,
+   "kind": "hard"
+  },
+  "edited_plus_3mm_excl_unchanged_features: min concave radius mm (info)": {
+   "value": 2.01,
+   "limit": "info",
+   "pass": null,
+   "kind": "info"
+  },
+  "edited_plus_3mm_excl_unchanged_features: convex radius p0.5 mm": {
+   "value": 1.59,
+   "limit": ">= 3.0",
+   "pass": false,
+   "kind": "hard"
+  },
+  "edited_plus_3mm_excl_unchanged_features: max concave normal turn deg/mm (kink)": {
+   "value": 41.07,
+   "limit": "<= 10.0",
+   "pass": false,
+   "kind": "hard"
+  },
+  "edited_plus_3mm_excl_unchanged_features: max convex normal turn deg/mm (kink)": {
+   "value": 61.69,
+   "limit": "<= 25.0",
+   "pass": false,
+   "kind": "hard"
+  },
+  "edited_plus_3mm_excl_unchanged_features: max normal turn deg/mm (info, unsigned)": {
+   "value": 61.69,
+   "limit": "info",
+   "pass": null,
+   "kind": "info"
+  },
+  "frozen region max change mm": {
+   "value": 0.0,
+   "limit": "<= 0.05",
+   "pass": true,
+   "kind": "hard"
+  },
+  "grow max / recede max vs no-fit mm (info)": {
+   "value": [
+    0.82,
+    2.07
+   ],
+   "limit": "info",
+   "pass": null,
+   "kind": "info"
+  },
+  "Z40 section vs no-fit, max dev mm": {
+   "value": 0.0,
+   "limit": "<= 0.05",
+   "pass": true,
+   "kind": "hard"
+  },
+  "top face verts / back edge Y = no-fit": {
+   "value": [
+    [
+     27566,
+     27566
+    ],
+    [
+     -62.25,
+     -62.25
+    ]
+   ],
+   "limit": "equal",
+   "pass": true,
+   "kind": "hard"
+  },
+  "bbox min y / z shift vs no-fit mm (screws)": {
+   "value": 0.0001,
+   "limit": "<= 0.01",
+   "pass": true,
+   "kind": "hard"
+  },
+  "bbox x extent vs no-fit mm (|x| max 82.896; OPEN QUESTION: it sits on the palm contact)": {
+   "value": 0.596,
+   "limit": "<= 0.01",
+   "pass": false,
+   "kind": "bbox_x"
+  },
+  "case_top volume change vs no-fit mm3": {
+   "value": 0.1,
+   "limit": "|d| <= 10 (noise 3.3)",
+   "pass": true,
+   "kind": "hard"
+  },
+  "case_middle_plate vs no-fit: [volume change mm3, bbox shift mm]": {
+   "value": [
+    -0.3,
+    0.004
+   ],
+   "limit": "|dV| <= 1, bbox <= 0.05",
+   "pass": true,
+   "kind": "hard"
+  },
+  "case_top surface vs no-fit case_top, max dev mm": {
+   "value": 0.0119,
+   "limit": "<= 0.05",
+   "pass": true,
+   "kind": "hard"
+  },
+  "skin closed manifold, 1 island, genus 0": {
+   "value": [
+    true,
+    1,
+    0.0
+   ],
+   "limit": "True, 1, 0",
+   "pass": true,
+   "kind": "hard"
+  },
+  "skin wound outward: raw signed volume mm3": {
+   "value": 426603.4,
+   "limit": "> 0",
+   "pass": true,
+   "kind": "hard"
+  },
+  "parts wound outward: raw signed volume > 0": {
+   "value": "all 21 ok",
+   "limit": "no part inside-out",
+   "pass": true,
+   "kind": "hard"
+  },
+  "parts vs plain GripV (all but case_top/bottom/middle_plate): |volume change| <= 1 mm3, same Euler char": {
+   "value": "all 24 ok",
+   "limit": "[part, dV mm3, chi, plain chi]",
+   "pass": true,
+   "kind": "hard"
+  },
+  "case_middle_plate vs plain GripV: volume change mm3 (info; the stage remesh alone gives about +1.9)": {
+   "value": 1.6,
+   "limit": "info",
+   "pass": null,
+   "kind": "info"
+  },
+  "cable holder vs plain: [volume change mm3, Euler char, plain Euler char]": {
+   "value": [
+    0.4,
+    0,
+    0
+   ],
+   "limit": "|dV| <= 1, same chi",
+   "pass": true,
+   "kind": "hard"
+  },
+  "top face max Z 59.04, nothing above": {
+   "value": [
+    59.04002,
+    0
+   ],
+   "limit": "59.04, 0",
+   "pass": true,
+   "kind": "hard"
+  },
+  "max Y (R1/L1 position)": {
+   "value": -4.158,
+   "limit": "= -4.158",
+   "pass": true,
+   "kind": "hard"
+  },
+  "battery face (verts at x = 0, flat face)": {
+   "value": [
+    442,
+    26.56
+   ],
+   "limit": "ok",
+   "pass": true,
+   "kind": "hard"
+  },
+  "stick cutout clearance mm": {
+   "value": 2.25,
+   "limit": ">= 0.8",
+   "pass": true,
+   "kind": "hard"
+  },
+  "handle wall p1 mm": {
+   "value": 9.67,
+   "limit": ">= 2.0",
+   "pass": true,
+   "kind": "hard"
+  },
+  "R2 seat: skin at press-face centre mm": {
+   "value": 1.337,
+   "limit": "0.1..0.3 (target 0.2)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "R2 seat: rim max |dev| from seat plane mm": {
+   "value": 5.333,
+   "limit": "<= 0.3",
+   "pass": false,
+   "kind": "hard"
+  },
+  "R4 seat: skin at press-face centre mm": {
+   "value": 1.574,
+   "limit": "0.1..0.3 (target 0.2)",
+   "pass": false,
+   "kind": "hard"
+  },
+  "R4 seat: rim max |dev| from seat plane mm": {
+   "value": 7.984,
+   "limit": "<= 0.3",
+   "pass": false,
+   "kind": "hard"
+  },
+  "R2 fingertip pad to press-face centre mm": {
+   "value": -0.5,
+   "limit": "-0.55..-0.45 (-0.5)",
+   "pass": true,
+   "kind": "hard"
+  },
+  "R2 hand overlap with the trigger part mm": {
+   "value": 0.5,
+   "limit": "<= 0.55",
+   "pass": true,
+   "kind": "hard"
+  },
+  "R4 fingertip pad to press-face centre mm": {
+   "value": -0.5,
+   "limit": "-0.55..-0.45 (-0.5)",
+   "pass": true,
+   "kind": "hard"
+  },
+  "R4 hand overlap with the trigger part mm": {
+   "value": 0.5,
+   "limit": "<= 0.55",
+   "pass": true,
+   "kind": "hard"
+  },
+  "internal objects: wall >= min(no-fit wall, 1.5) mm": {
+   "value": [
+    [
+     "screw bools",
+     -12.26,
+     -12.13
+    ]
+   ],
+   "limit": "no object closer",
+   "pass": false,
+   "kind": "hard"
+  },
+  "internal objects: min wall to the skin mm (info)": {
+   "value": [
+    "screw bools",
+    -12.26
+   ],
+   "limit": "info",
+   "pass": null,
+   "kind": "info"
+  },
+  "internal objects: max wall loss vs plain mm (info)": {
+   "value": [
+    "screw bools",
+    0.97
+   ],
+   "limit": "info",
+   "pass": null,
+   "kind": "info"
+  },
+  "R1/L1 shift mm": {
+   "value": 0.0,
+   "limit": "0",
+   "pass": true,
+   "kind": "hard"
+  },
+  "_summary": {
+   "hard_fail": [
+    "contact middle root pad: penetration mm",
+    "contact middle PIP: penetration mm",
+    "contact ring root pad: penetration mm",
+    "contact ring PIP: penetration mm",
+    "contact pinky root pad: penetration mm",
+    "contact pinky PIP: penetration mm",
+    "contact pinky distal: penetration mm",
+    "contact palm on swell: penetration mm",
+    "max dig, editable region mm",
+    "edited_plus_3mm_excl_unchanged_features: % area concave R < 8 mm",
+    "edited_plus_3mm_excl_unchanged_features: concave radius p0.5 mm",
+    "edited_plus_3mm_excl_unchanged_features: convex radius p0.5 mm",
+    "edited_plus_3mm_excl_unchanged_features: max concave normal turn deg/mm (kink)",
+    "edited_plus_3mm_excl_unchanged_features: max convex normal turn deg/mm (kink)",
+    "bbox x extent vs no-fit mm (|x| max 82.896; OPEN QUESTION: it sits on the palm contact)",
+    "R2 seat: skin at press-face centre mm",
+    "R2 seat: rim max |dev| from seat plane mm",
+    "R4 seat: skin at press-face centre mm",
+    "R4 seat: rim max |dev| from seat plane mm",
+    "internal objects: wall >= min(no-fit wall, 1.5) mm"
+   ],
+   "soft_fail": [
+    "support middle root pad: % of zone within 1.5 mm",
+    "support middle PIP: % of zone within 1.5 mm",
+    "support ring root pad: % of zone within 1.5 mm",
+    "support ring PIP: % of zone within 1.5 mm",
+    "support palm on swell: % of zone within 1.5 mm"
+   ],
+   "n_hard_checks": 43,
+   "accepted": false,
+   "accepted_except_bbox_x": false
+  }
+ },
+ "summary3": "ACCEPT NO (without the bbox-x check: NO): 20/43 hard checks fail: contact middle root pad; contact middle PIP; contact ring root pad; contact ring PIP; contact pinky root pad; contact pinky PIP | soft fails 5",
+ "seconds_total": 28.4,
+ "summary2": "case_top vol 34132 (base 34386.8; bmesh 34131.8 base 34383.7) top verts 2605 closed True | R1/L1 shift 0.0 mm | Z40 section dev 0.083 mm | wrap max 130 deg | R2 hand overlap 0.5 pad-face gap -0.5 | R4 hand overlap 0.5 pad-face gap -0.5"
+}
