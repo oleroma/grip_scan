@@ -78,6 +78,27 @@ is `python run_all.py --demo`.
   fingers, a skin that could not be closed cleanly, or a large flat cap are
   reported there.
 
+## Re-placing the hand so the real skin sits on the grip
+
+The **hold** step copies the cylinder hand's joints, so a hand with a different
+skin thickness can float off the grip or sink into it. `hold_solve.py` moves and
+turns the whole hand and bends its joints (staying close to your hold pose and
+inside normal joint limits) until the palm rests on the palm swell, the index
+touches R1, the middle and ring fingertips sit on R2 / R4, the pinky pad touches
+the grip, the thumb stays where it was and no skin goes more than about half a
+millimetre into the plastic:
+
+```
+python hold_solve.py solve --params skin_params.json   # about 3 minutes
+python hold_solve.py export                            # .blend, pose.json, contacts.json, metrics.json
+python hold_solve.py render --solve <solve json> ; python hold_solve.py sheet   # before / after picture
+```
+
+`metrics.json` lists before and after side by side (palm gap, deepest skin in the
+plastic, fingertip-to-button distances, flipped skin triangles, index-to-thumb
+weight leak). The file locations at the top of `hold_solve.py` need the same
+change as the other scripts.
+
 ## Things to know
 
 - The new hand only matches your hand once the real scan is in. Until then it is

@@ -172,9 +172,87 @@ def append_from_hold(hold_rig):
     return cg, co
 
 
-def step_hold(a):
+def write_hold_blend(sk, M, R, t, pose_angles, hold_rig, out_blend):
+    """Pose the open Skinner's rig in Blender (bone transforms M, armature-local), place the
+    armature object on the grip (R, t), add grip + markers + the hidden old cylinder hand from
+    hold_rig, save out_blend.  Returns (Blender-evaluated skin verts, numpy reference with the
+    same live bulge values, live-vs-numpy check)."""
     import bpy
     from mathutils import Matrix
+    T = np.eye(4)
+    T[:3, :3], T[:3, 3] = R, t
+    # bones (relative to the scan's rest), then the armature object carries the placement
+    bv_meas = sk.bulge_values(M=M)       # same hinge measure the live drivers read
+    sk._pose_blender(M, bv_meas)
+    arm, ob = sk.arm, sk.ob
+    arm.matrix_world = Matrix(T.tolist())
+    drivers = list(getattr(sk, "drivers", []))   # added by Skinner.apply_to_blend
+
+    # material for the new skin
+    mat = bpy.data.materials.new("scan skin")
+    mat.diffuse_color = (0.86, 0.62, 0.50, 1)
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes.get("Principled BSDF")
+    if bsdf:
+        bsdf.inputs["Base Color"].default_value = (0.80, 0.52, 0.40, 1)
+        bsdf.inputs["Roughness"].default_value = 0.55
+    ob.data.materials.clear()
+    ob.data.materials.append(mat)
+
+    # collections: new hand, grip, old hand
+    sc = bpy.context.scene
+    cn = bpy.data.collections.new(NEW_COLL)
+    sc.collection.children.link(cn)
+    for o in (ob, arm):
+        for c in list(o.users_collection):
+            c.objects.unlink(o)
+        cn.objects.link(o)
+    append_from_hold(hold_rig)
+    sc.unit_settings.system, sc.unit_settings.scale_length = "METRIC", 0.001
+    sc.unit_settings.length_unit = "MILLIMETERS"
+    arm.data.display_type = "STICK"
+    arm.show_in_front = True
+    arm["hold_pose"] = json.dumps(pose_angles)
+    arm["how_to"] = ("Select 'hand rig', Ctrl+Tab for Pose Mode, rotate bones (R, then X X for "
+                     "flexion: + curls toward the palm). Skin follows through the Armature + "
+                     "CorrectiveSmooth modifiers and the bulge shape keys (drivers).")
+
+    # --- evaluate the live Blender result and check it against the numpy backend
+    dg = bpy.context.evaluated_depsgraph_get()
+    dg.update()
+    bv_live = {kb.name[6:]: float(kb.value) for kb in ob.evaluated_get(dg).data.shape_keys.key_blocks[1:]} \
+        if ob.data.shape_keys else {}
+    me = ob.evaluated_get(dg).to_mesh()
+    Vb = np.zeros(len(me.vertices) * 3, np.float32)
+    me.vertices.foreach_get("co", Vb)
+    ob.evaluated_get(dg).to_mesh_clear()
+    mw = np.array(ob.matrix_world)
+    Vb = Vb.reshape(-1, 3).astype(float) @ mw[:3, :3].T + mw[:3, 3]
+    # numpy reference in the armature's own space (as Blender deforms), then placed
+    Vn_meas = sk._pose_numpy(M, bv_meas) @ R.T + t
+    Vn_live = sk._pose_numpy(M, bv_live) @ R.T + t
+    check = {
+        "blender_vs_numpy_same_bulge_mm": {"max": float(np.abs(Vb - Vn_live).max()),
+                                           "mean": float(np.linalg.norm(Vb - Vn_live, axis=1).mean())},
+        "driver_bulge_vs_measured_bulge_mm": {"max": float(np.linalg.norm(Vn_live - Vn_meas, axis=1).max())},
+        "bulge_live": bv_live, "bulge_measured": bv_meas,
+        "drivers": [{"key": k, "bone": b, "simple_expression": s} for k, b, s in drivers],
+    }
+    # make the rig the active object, in Pose Mode
+    for o in bpy.context.view_layer.objects:
+        o.select_set(False)
+    bpy.context.view_layer.objects.active = arm
+    arm.select_set(True)
+    try:
+        bpy.ops.object.mode_set(mode="POSE")
+    except Exception as e:  # headless context; Olex presses Ctrl+Tab
+        log("pose mode not set:", e)
+    os.makedirs(os.path.dirname(os.path.abspath(out_blend)), exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=out_blend)
+    return Vb, Vn_live, check
+
+
+def step_hold(a):
     import skin
     from skin import MEAS, NAMES, Skinner, measurements, load_params
     out_blend = os.path.join(a.out, "hand_on_grip_scan.blend")
@@ -213,77 +291,8 @@ def step_hold(a):
     diff = {n: float(np.linalg.norm(R @ P[n] + t - H[n])) for n in names}
     got = measurements({n: R @ P[n] + t for n in names})
     ang_err = {k: float(got[k] - hold_angles[k]) for k in pkeys}
-    T = np.eye(4)
-    T[:3, :3], T[:3, 3] = R, t
 
-    # bones (relative to the scan's rest), then the armature object carries the placement
-    bv_meas = sk.bulge_values(M=M)       # same hinge measure the live drivers read
-    sk._pose_blender(M, bv_meas)
-    arm, ob = sk.arm, sk.ob
-    arm.matrix_world = Matrix(T.tolist())
-    drivers = list(getattr(sk, "drivers", []))   # added by Skinner.apply_to_blend
-
-    # material for the new skin
-    mat = bpy.data.materials.new("scan skin")
-    mat.diffuse_color = (0.86, 0.62, 0.50, 1)
-    mat.use_nodes = True
-    bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.80, 0.52, 0.40, 1)
-        bsdf.inputs["Roughness"].default_value = 0.55
-    ob.data.materials.clear()
-    ob.data.materials.append(mat)
-
-    # collections: new hand, grip, old hand
-    sc = bpy.context.scene
-    cn = bpy.data.collections.new(NEW_COLL)
-    sc.collection.children.link(cn)
-    for o in (ob, arm):
-        for c in list(o.users_collection):
-            c.objects.unlink(o)
-        cn.objects.link(o)
-    append_from_hold(a.hold_rig)
-    sc.unit_settings.system, sc.unit_settings.scale_length = "METRIC", 0.001
-    sc.unit_settings.length_unit = "MILLIMETERS"
-    arm.data.display_type = "STICK"
-    arm.show_in_front = True
-    arm["hold_pose"] = json.dumps(pose["angles"])
-    arm["how_to"] = ("Select 'hand rig', Ctrl+Tab for Pose Mode, rotate bones (R, then X X for "
-                     "flexion: + curls toward the palm). Skin follows through the Armature + "
-                     "CorrectiveSmooth modifiers and the bulge shape keys (drivers).")
-
-    # --- evaluate the live Blender result and check it against the numpy backend
-    dg = bpy.context.evaluated_depsgraph_get()
-    dg.update()
-    bv_live = {kb.name[6:]: float(kb.value) for kb in ob.evaluated_get(dg).data.shape_keys.key_blocks[1:]} \
-        if ob.data.shape_keys else {}
-    me = ob.evaluated_get(dg).to_mesh()
-    Vb = np.zeros(len(me.vertices) * 3, np.float32)
-    me.vertices.foreach_get("co", Vb)
-    ob.evaluated_get(dg).to_mesh_clear()
-    mw = np.array(ob.matrix_world)
-    Vb = Vb.reshape(-1, 3).astype(float) @ mw[:3, :3].T + mw[:3, 3]
-    # numpy reference in the armature's own space (as Blender deforms), then placed
-    Vn_meas = sk._pose_numpy(M, bv_meas) @ R.T + t
-    Vn_live = sk._pose_numpy(M, bv_live) @ R.T + t
-    check = {
-        "blender_vs_numpy_same_bulge_mm": {"max": float(np.abs(Vb - Vn_live).max()),
-                                           "mean": float(np.linalg.norm(Vb - Vn_live, axis=1).mean())},
-        "driver_bulge_vs_measured_bulge_mm": {"max": float(np.linalg.norm(Vn_live - Vn_meas, axis=1).max())},
-        "bulge_live": bv_live, "bulge_measured": bv_meas,
-        "drivers": [{"key": k, "bone": b, "simple_expression": s} for k, b, s in drivers],
-    }
-    # make the rig the active object, in Pose Mode
-    for o in bpy.context.view_layer.objects:
-        o.select_set(False)
-    bpy.context.view_layer.objects.active = arm
-    arm.select_set(True)
-    try:
-        bpy.ops.object.mode_set(mode="POSE")
-    except Exception as e:  # headless context; Olex presses Ctrl+Tab
-        log("pose mode not set:", e)
-    os.makedirs(a.out, exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=out_blend)
+    Vb, Vn_live, check = write_hold_blend(sk, M, R, t, pose["angles"], a.hold_rig, out_blend)
     np.save(os.path.join(a.out, "hand_hold_verts.npy"), Vb)
     # skin-on-skin contact in the hold pose (fingers on fingers / palm).  The live .blend has no
     # contact pass (Blender modifiers only); measure what it would correct.
@@ -460,19 +469,30 @@ def hand_contacts(parts, grip, markers, spacing):
 
 
 def step_contacts(a):
-    import bpy
     out = os.path.join(a.out, "contacts.json")
     if os.path.exists(out) and not a.force:
         log("contacts: exists, skipped")
         return
+    res = contacts_of_blend(os.path.join(a.out, "hand_on_grip_scan.blend"), a.spacing)
+    jdump(res, out)
+    for k in ("old_cylinder_hand", "new_scan_hand"):
+        r = res[k]
+        log(f"{k}: pen max {r['penetration_max_mm']:.2f} p95 {r['penetration_p95_mm']:.2f} mm "
+            f"area {r['penetrating_area_cm2']:.1f} cm2; swell gap {r['palm_swell_gap_mm']}; "
+            f"R1 {r['R1_index_fingertip_mm']} R2 {r['R2_middle_fingertip_mm']} R4 {r['R4_ring_fingertip_mm']}")
+
+
+def contacts_of_blend(blend, spacing, old=True):
+    """contacts.json content for a hand_on_grip .blend (old cylinder hand too unless old=False)."""
+    import bpy
     t0 = time.time()
-    bpy.ops.wm.open_mainfile(filepath=os.path.join(a.out, "hand_on_grip_scan.blend"))
+    bpy.ops.wm.open_mainfile(filepath=blend)
     dg = bpy.context.evaluated_depsgraph_get()
     grip = Surface(*world_mesh(bpy.data.objects[GRIP]))
     markers = {n: np.array(bpy.data.objects[n].matrix_world.translation) for n in MARKERS}
     # old: the cylinder pieces (each bone-parented, closed)
     old_parts = []
-    for o in bpy.data.collections[OLD_COLL].objects:
+    for o in (bpy.data.collections[OLD_COLL].objects if old else []):
         if o.type == "MESH":
             V, F = world_mesh(o, dg)
             old_parts.append((o.parent_bone or o.name, V, F))
@@ -485,8 +505,8 @@ def step_contacts(a):
         best = max(((g.weight, names[g.group]) for g in v.groups if names[g.group] != "cs_mask"),
                    default=(0, "palm"))
         lab[v.index] = best[1]
-    res = {"old_cylinder_hand": hand_contacts(old_parts, grip, markers, a.spacing),
-           "new_scan_hand": hand_contacts([(lab, V, F)], grip, markers, a.spacing),
+    res = {**({"old_cylinder_hand": hand_contacts(old_parts, grip, markers, spacing)} if old else {}),
+           "new_scan_hand": hand_contacts([(lab, V, F)], grip, markers, spacing),
            "definitions": {
                "penetration": "skin sampled evenly (spacing^2 per sample); depth of each sample inside "
                               "the closed grip mesh; p95/median over the penetrating samples; area = "
@@ -497,12 +517,7 @@ def step_contacts(a):
                            "ring fingertip (distal segment) and of the whole finger; negative = inside",
            },
            "seconds": time.time() - t0}
-    jdump(res, out)
-    for k in ("old_cylinder_hand", "new_scan_hand"):
-        r = res[k]
-        log(f"{k}: pen max {r['penetration_max_mm']:.2f} p95 {r['penetration_p95_mm']:.2f} mm "
-            f"area {r['penetrating_area_cm2']:.1f} cm2; swell gap {r['palm_swell_gap_mm']}; "
-            f"R1 {r['R1_index_fingertip_mm']} R2 {r['R2_middle_fingertip_mm']} R4 {r['R4_ring_fingertip_mm']}")
+    return res
 
 
 # ------------------------------------------------------------------ step: sheet
