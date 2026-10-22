@@ -32,6 +32,9 @@ def args():
     ap.add_argument("--work", default="/tmp/claude-0/hs/work/grip_rig")
     ap.add_argument("--out", default="/tmp/claude-0/hs/work/grip_rig/grip_rig_sheet.jpg")
     ap.add_argument("--max-mm", type=float, default=4.0)
+    ap.add_argument("--compare", default=None,
+                    help="second work dir: left = this work's posed grip + hand, middle = the other's, right = other vs this")
+    ap.add_argument("--titles", default=None, help="three column titles separated by '|'")
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     return ap.parse_args(argv)
 
@@ -104,6 +107,11 @@ def main():
     pm = np.load(os.path.join(a.work, "posed_meshes.npz"))
     h = np.load(os.path.join(a.work, "hand_hold.npz"))
     S0, S1, T = pm["rest"], pm["posed"], pm["T"]
+    h1 = h
+    if a.compare:
+        S0 = S1
+        S1 = np.load(os.path.join(a.compare, "posed_meshes.npz"))["posed"]
+        h1 = np.load(os.path.join(a.compare, "hand_hold.npz"))
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
     sc.render.engine = "CYCLES"
@@ -134,26 +142,29 @@ def main():
     g1c.data.materials.append(m_chg)
     hand = mesh_obj("hand", h["V"], h["T"])
     hand.data.materials.append(m_hand)
+    hand1 = mesh_obj("hand 2", h1["V"], h1["T"])
+    hand1.data.materials.append(m_hand)
     target = np.array([62.0, -50.0, 18.0])
     tiles = {}
     jobs = [(vi, key, objs) for vi in range(len(VIEWS))
             for key, objs in (("orig", [g0]), ("posed", [g1]), ("posed_chg", [g1c]))]
-    jobs += [(len(VIEWS), "orig", [g0, hand]), (len(VIEWS), "posed", [g1, hand])]
+    jobs += [(len(VIEWS), "orig", [g0, hand]), (len(VIEWS), "posed", [g1, hand1])]
     for vi, key, objs in jobs:
         vname, d, up = VIEWS[min(vi, HAND_VIEW if vi == len(VIEWS) else vi)]
-        for o in (g0, g1, g1c, hand):
+        for o in (g0, g1, g1c, hand, hand1):
             o.hide_render = o not in objs
         camera(target, d, up, 140 if vi < len(VIEWS) else 190)
         tiles[(vi, key)] = render(os.path.join(a.work, f"tile_{vi}_{key}.png"))
     # sheet: rows = views, columns = original + hand | posed + hand | what changed
     pad, head = 20, 120
     W = 3 * RES + 4 * pad
-    rows = [v[0] for v in VIEWS] + ["with your hand (see-through), palm side"]
+    rows = [v[0] for v in VIEWS] + [("with each hand" if a.compare else "with your hand") + " (see-through), palm side"]
     H = head + len(rows) * (RES + 60 + pad) + 150
     sheet = Image.new("RGB", (W, H), "white")
     dr = ImageDraw.Draw(sheet)
     fb, f, fs = ImageFont.truetype(FONT_B, 44), ImageFont.truetype(FONT, 34), ImageFont.truetype(FONT, 28)
-    titles = ["Original GripV", "After the solver", "What changed (red = grew, blue = pulled in)"]
+    titles = (a.titles.split("|") if a.titles else
+              ["Original GripV", "After the solver", "What changed (red = grew, blue = pulled in)"])
     for c, t in enumerate(titles):
         dr.text((pad + c * (RES + pad) + RES // 2, 60), t, font=f, fill="black", anchor="mm")
     for r, vname in enumerate(rows):
