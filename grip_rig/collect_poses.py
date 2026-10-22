@@ -38,6 +38,7 @@ def args():
     ap.add_argument("--work", default="/tmp/claude-0/hs/work/grip_rig", help="rig_state / bones of the rig")
     ap.add_argument("--out", required=True)
     ap.add_argument("--renders", required=True)
+    ap.add_argument("--no-renders", action="store_true")
     ap.add_argument("runs", nargs="+")
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     return ap.parse_args(argv)
@@ -51,9 +52,23 @@ def load_x(w):
     raise FileNotFoundError(w)
 
 
-def key_pose(rig, model, x, frame, action):
+def use_action(rig, action):
+    """Assign an action and its slot (Blender 5 layered actions animate nothing without a slot)."""
     rig.animation_data.action = action
+    if action is None:
+        return
+    if hasattr(rig.animation_data, "action_slot") and action is not None:
+        if not len(action.slots):
+            action.slots.new(id_type="OBJECT", name=rig.name)
+        rig.animation_data.action_slot = action.slots[0]
+
+
+def key_pose(rig, model, x, frame, action):
+    # pose with no action assigned (an update with the action on would re-evaluate it and overwrite the
+    # pose), then assign the action and key the values as they stand
+    use_action(rig, None)
     model.apply_to_rig(rig, x)
+    use_action(rig, action)
     for pb in rig.pose.bones:
         pb.keyframe_insert("location", frame=frame)
         pb.keyframe_insert("rotation_euler", frame=frame)
@@ -117,8 +132,16 @@ def main():
             ob.keyframe_insert("hide_render", frame=f)
         hands.append((lab, ob, x))
     set_constant(allp)
-    rig.animation_data.action = allp
-    sc_ = bpy.context.scene
+    use_action(rig, allp)
+    # Grip.blend opens on scene GripX; show the rig and the hands in the GripV scene too and open there
+    gv = bpy.data.scenes.get("GripV")
+    if gv is not None:
+        for cname in ("grip rig", HAND_COLL):
+            cl = bpy.data.collections.get(cname)
+            if cl is not None and cl.name not in gv.collection.children:
+                gv.collection.children.link(cl)
+        bpy.context.window.scene = gv
+    sc_ = bpy.context.window.scene
     sc_.frame_start, sc_.frame_end = 1, len(runs) + 1
     txt = bpy.data.texts.get("grip rig poses") or bpy.data.texts.new("grip rig poses")
     txt.clear()
@@ -130,12 +153,14 @@ def main():
     bpy.ops.wm.save_as_mainfile(filepath=a.out, compress=True)
     print("[poses] saved", a.out, flush=True)
 
+    if a.no_renders:
+        return
     # ---- renders: evaluated basemesh of each pose with its hand (separate empty scene)
     os.makedirs(a.renders, exist_ok=True)
     cage = bpy.data.objects[sc.CAGE]
     meshes = [("Original GripV", np.zeros(model.n), None)] + [(lab, x, ob) for lab, ob, x in hands]
     Vs = []
-    rig.animation_data.action = None
+    use_action(rig, None)
     for lab, x, ob in meshes:
         model.apply_to_rig(rig, x)
         dg = bpy.context.evaluated_depsgraph_get()
