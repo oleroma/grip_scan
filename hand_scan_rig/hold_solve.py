@@ -173,6 +173,7 @@ class Scene:
         self.sel = {"palm": np.flatnonzero(pal)}
         for f in ("index", "middle", "ring", "pinky", "thumb"):
             self.sel[f + "_distal"] = np.flatnonzero(self.lab == f + "_distal")
+        self.sel["palm_side"] = palm_side_vertices(self)
         self.names = list(skin.NAMES)
 
     # -- grip distance
@@ -205,6 +206,51 @@ class Scene:
         Rb = np.array([o["M"][b][0] for b in skin.BONES])
         n0r = np.einsum("fij,fj->fi", Rb[self.face_bone], self.n0)
         return np.einsum("ij,ij->i", n0r, n1) < thresh, np.einsum("ij,ij->i", n0r, n1)
+
+
+def palm_side_vertices(S):
+    """Palm-side (front) skin of the metacarpal region, as web_hand_rig/code/hold.py PALMSIDE:
+    palm / finger-metacarpal skin 15-75 mm from the wrist along wrist->middle MCP, more than
+    4 mm out of the joint plane toward the palm; thumb-metacarpal skin (thenar, weight > 0.2) left out."""
+    import skin
+    rig = S.rig
+    q = S.sk.V0 - rig.L["wrist"]
+    ya, zn = q @ rig.along, q @ rig.n          # rig.n points out of the palm (finger flexion side)
+    pal = np.isin(S.lab, ["palm", "index_metacarpal", "middle_metacarpal", "ring_metacarpal", "pinky_metacarpal"])
+    thw = S.sk.W[:, skin.BI["thumb_metacarpal"]]
+    return np.flatnonzero(pal & (zn > 4.0) & (ya > 15.0) & (ya < 75.0) & (thw < 0.2))
+
+
+def palm_plane(S, o):
+    """Plane fitted (SVD) to the posed palm-side skin.  Returns (unit normal pointing out of the
+    palm, tilt from vertical deg (asin n_z, + = palm faces up), plan angle deg of the palm's facing
+    direction from -X (atan2(n_y, -n_x))): the same definition as web_hand_rig/code/hold.py.
+    Upright palm 'holding a box' = tilt ~0, plan ~0 (palm faces the other hand, -X)."""
+    Q = o["V"][S.sel["palm_side"]]
+    _, _, vt = np.linalg.svd(Q - Q.mean(0), full_matrices=False)
+    n = vt[2]
+    if n @ (o["R"] @ S.rig.n) < 0:
+        n = -n
+    return n, float(np.degrees(np.arcsin(np.clip(n[2], -1, 1)))), float(np.degrees(np.arctan2(n[1], -n[0])))
+
+
+def half_palm_rolls(P):
+    """Tilt from vertical (deg, + = facing up) of the radial (wrist, index MCP, middle MCP) and the
+    ulnar (wrist, ring MCP, pinky MCP) halves of the metacarpal plane and of the whole
+    (wrist, index MCP, pinky MCP) plane; the difference ulnar - radial is how much the palm is
+    folded (cupped) around the grip."""
+    out = {}
+    for k, (a, b, c) in {"radial_half": ("wrist", "index_mcp", "middle_mcp"),
+                         "ulnar_half": ("wrist", "ring_mcp", "pinky_mcp"),
+                         "wrist_index_pinky": ("wrist", "index_mcp", "pinky_mcp")}.items():
+        m = np.cross(P[b] - P[a], P[c] - P[a])
+        m /= np.linalg.norm(m)
+        if m[0] > 0:                  # right hand on the grip: the palm faces -X
+            m = -m
+        out[k + "_tilt_deg"] = round(float(np.degrees(np.arcsin(m[2]))), 2)
+        out[k + "_plan_deg"] = round(float(np.degrees(np.arctan2(m[1], -m[0]))), 2)
+    out["fold_ulnar_minus_radial_deg"] = round(out["ulnar_half_tilt_deg"] - out["radial_half_tilt_deg"], 2)
+    return out
 
 
 def face_normals(V, F):
@@ -248,19 +294,24 @@ class Objective:
         import skin
         self.S, self.z_ref = S, np.asarray(z_ref, float)
         self.w = dict(pen=4.0, swell=4.0, button=4.0, r1_along=1.0, pinky=2.0, thumb=1.0,
-                      joints=1.0, angles=1.0, limits=2.0, flips=3.0, twist=1.0)
+                      joints=1.0, angles=1.0, limits=2.0, flips=3.0, twist=1.0,
+                      upright=0.0, arch=0.0, arch_sig=1.5, ref_scale=1.0)
+        # upright: weight on n_z of the palm-side skin plane (palm_plane), 0 = off (hold_v2);
+        # arch: pull of the two palm-arch angles to the OPEN-hand (scan rest) values, sigma arch_sig deg
+        # (a flat palm, no cupping), 0 = off; ref_scale < 1 tightens every reference sigma (joints, angles)
         self.w.update(w or {})
         ref = S.ref
         # angle keys of the prior: SPEC angles (spreads signed), thumb by azimuth + elevation
         self.akeys = [k for k in skin.MEAS if k != "thumb_cmc"] + ["thumb_cmc_azimuth"]
         self.aref = np.array([ref["_s" + k] if k.startswith("spread") else ref[k] for k in self.akeys])
-        self.asig = np.array([SIG.get(k, SIG_DEFAULT) for k in self.akeys])
+        self.asig = np.array([SIG.get(k, SIG_DEFAULT) for k in self.akeys]) * self.w["ref_scale"]
         self.jw = np.array([w_ if n.startswith("thumb") else 1.0 for n in S.names
                             for w_ in [self.w["thumb"]]])
         self.lkeys = [k for k in skin.MEAS if limit_of(k) is not None and k != "thumb_cmc"]
         self.Href = np.array([S.H[n] for n in S.names])
         self.jsig = np.array([6.0 if n == "wrist" else 3.0 if n in ("thumb_mcp", "thumb_ip", "thumb_tip")
-                              else 12.0 for n in S.names])
+                              else 12.0 for n in S.names]) * self.w["ref_scale"]
+        self.arch_rest = np.array([S.rig.rest_meas[k] for k in ("arch_imr", "arch_mrp")])
         # the R1 contact point: R1's centre projected onto the grip surface (the marker sits 4.6 mm
         # inside the plastic); the index skin must touch it
         p = S.markers["R1 target"]
@@ -317,6 +368,11 @@ class Objective:
             lim.append(max(0.0, lo - v) + max(0.0, v - hi))
         r.append(w["limits"] * np.array(lim))
         r.append(w["twist"] * (z[21:24] - self.z_ref[21:24]) / 10.0)
+        if w["upright"] > 0:
+            n_palm = palm_plane(S, o)[0]
+            r.append([w["upright"] * n_palm[2]])
+        if w["arch"] > 0:
+            r.append(w["arch"] * (np.array([m["arch_imr"], m["arch_mrp"]]) - self.arch_rest) / w["arch_sig"])
         fl, dot = S.flips(o)
         r.append(w["flips"] * np.maximum(0.0, 0.2 - dot))
         res = np.concatenate([np.atleast_1d(np.asarray(x, float)) for x in r])

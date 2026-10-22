@@ -99,6 +99,23 @@ plastic, fingertip-to-button distances, flipped skin triangles, index-to-thumb
 weight leak). The file locations at the top of `hold_solve.py` need the same
 change as the other scripts.
 
+## Palm upright, in the web hand's pose
+
+`hold_v2` folded the pinky side of the palm about 19 deg in around the grip (palm arch 15.5 deg), so
+the hand looked rolled inward. `hold_upright.py` puts the scanned hand into the pose of the web
+(MakeHuman) hand in `web_hand_rig/` instead: flat palm, both halves of the palm upright "like holding
+a box", then moves it only as much as the real skin needs to sit on the palm swell, R1, R2 and R4:
+
+```
+python hold_upright.py ref ; python hold_upright.py start      # take over the web hand's joints
+python hold_upright.py solve --tag a                            # about 2 minutes
+python hold_upright.py export --tag a                           # .blend, pose.json, contacts.json, metrics.json
+python hold_upright.py render --tag a ; python hold_upright.py sheet
+```
+
+`metrics.json` compares hold_v2 and the new pose (palm tilt, how far the pinky side is folded, palm
+arch, contacts, flipped triangles) and lists every joint angle against the web hand's.
+
 ## Things to know
 
 - The new hand only matches your hand once the real scan is in. Until then it is
