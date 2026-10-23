@@ -16,7 +16,8 @@ CASE_COLLS = ("case", "parts")
 
 # (bone, title, [(kind, index, label), ...])  kind: loc = pose location (mm), prop = custom property
 HAND = [
-    ("R1 hand", "Hand on R1", [("loc", 0, "contact along the finger (+ = toward tip)"),
+    ("R1 hand", "Hand on R1", [("num", "index offset", "index offset (0 = tip, 1 = deepest)"),
+                               ("prop", "deepest contact", "deepest contact, from tip"),
                                ("rot", 0, "turn about R1")]),
 ]
 GRIP = [
@@ -79,8 +80,9 @@ def apply_pose(rig, P):
             continue
         pb.location = e["loc"]
         pb.rotation_euler = e["rot"]
-        if "arch radius" in e and "arch radius" in pb:
-            pb["arch radius"] = e["arch radius"]
+        for k, v in e.items():                        # arch radius, index offset, deepest contact
+            if k not in ("loc", "rot") and k in pb:
+                pb[k] = v
     rig.update_tag()
 
 
@@ -108,6 +110,9 @@ class GRIPRIG_OT_reset_original(bpy.types.Operator):
         for pb in rig.pose.bones:
             pb.location = (0.0, 0.0, 0.0)
             pb.rotation_euler = (0.0, 0.0, 0.0)
+        scan = json.loads(rig["scan_pose"]).get("R1 hand", {})
+        apply_pose(rig, {"R1 hand": {"loc": [0.0] * 3, "rot": [0.0] * 3,
+                                     **{k: v for k, v in scan.items() if k not in ("loc", "rot")}}})
         for part, v in orig.items():
             pb = rig.pose.bones.get(part + " button top")
             if pb is not None:
@@ -227,6 +232,8 @@ def draw_bones(layout, rig, spec):
                 col.prop(pb, "location", index=idx, text=label + " (mm)")
             elif kind == "rot":
                 col.prop(pb, "rotation_euler", index=idx, text=label)
+            elif kind == "num":
+                col.prop(pb, f'["{idx}"]', text=label, slider=True)
             else:
                 col.prop(pb, f'["{idx}"]', text=label + " (mm)")
 
@@ -262,7 +269,7 @@ class GRIPRIG_PT_hand(bpy.types.Panel):
         pb = rig.pose.bones.get("R1 hand")
         info = json.loads(rig.get("index_curve", "{}"))
         if pb is not None and info:
-            s = info["s0"] + pb.location[0]
+            s = info["length"] - pb.get("index offset", 0.0) * pb.get("deepest contact", 0.0)
             j = info["joints_mm"]
             part = ("distal" if s >= j["distal"] else "middle" if s >= j["middle"] else
                     "proximal" if s >= j["proximal"] else "knuckle")

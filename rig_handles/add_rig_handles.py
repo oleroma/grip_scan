@@ -39,7 +39,7 @@ UI_TEXT = "grip_controls_ui.py"
 FINS = ("fin middle", "fin ring", "fin pinky", "stand")
 BUTTONS = {"R2": ("GripV R2 parameters", (15.0, 80.0)), "R4": ("GripV R4 parameters", (40.0, 200.0))}
 BUTTON_RANGE_MM = 10.0
-R1_SLIDE_MIN_MM = -15.0   # R1 hand handle: contact can move this far toward the knuckles
+DEEPEST_BEFORE_PIP_MM = 5.0   # index offset 1 = this far before the middle joint (on the middle phalanx)
 R1_TURN_DEG = 15.0        # ... and turn about X by at most this much either way
 HAND_OBJECTS = ("hand rig", "hold marker: R2 press", "hold marker: R4 press", "hold marker: palm swell")
 MAX_PRESS_DEG = 30.0      # warn when the press face is tilted more than this from the travel direction
@@ -316,8 +316,9 @@ def add_r1_handle(rig):
     ss = np.linspace(0.0, L, 4001)
     cc = np.array(list(c))
     s0 = float(ss[np.argmin(np.linalg.norm(curve(ss) - cc, axis=1))])
-    s_min = max(0.0, s0 + R1_SLIDE_MIN_MM)
+    s_min = float(joints[1])                          # the knuckle (metacarpal head)
     lo, hi = s_min - s0, L - s0                       # handle X range (mm along the finger)
+    deepest0 = L - float(joints[2]) - DEEPEST_BEFORE_PIP_MM   # mm from the tip at index offset 1
     ps_rest = rig.data.bones["palm swell"].head_local.copy()
 
     view = bpy.context.view_layer
@@ -347,9 +348,26 @@ def add_r1_handle(rig):
 
     pb = pbs["R1 hand"]
     pb.rotation_mode = "XYZ"
-    pb.lock_location = (False, True, True)
+    pb.lock_location = (True, True, True)             # X comes from 'index offset' (driver below)
     pb.lock_rotation = (False, True, True)
     pb.lock_scale = (True, True, True)
+    pb["index offset"] = hi / deepest0                # the scan contact
+    pb.id_properties_ui("index offset").update(
+        min=0.0, max=1.0, soft_min=0.0, soft_max=1.0, default=hi / deepest0, step=1, precision=3,
+        description="0 = R1 on the fingertip, 1 = R1 at 'deepest contact' toward the knuckle")
+    pb["deepest contact"] = deepest0
+    pb.id_properties_ui("deepest contact").update(
+        min=1.0, max=L - s_min, soft_min=10.0, soft_max=L - s_min, default=deepest0, precision=1,
+        description="where R1 touches at index offset 1, in mm from the fingertip (knuckle at %.0f)" % (L - s_min))
+    fc = pb.driver_add("location", 0)
+    drv = fc.driver
+    drv.type = "SCRIPTED"
+    for vn, prop in (("u", "index offset"), ("m", "deepest contact")):
+        v = drv.variables.new()
+        v.name, v.type = vn, "SINGLE_PROP"
+        v.targets[0].id = rig
+        v.targets[0].data_path = 'pose.bones["R1 hand"]["%s"]' % prop
+    drv.expression = "%r - u * m" % hi                # simple expression: no Python needed
     cl = pb.constraints.new("LIMIT_LOCATION")
     cl.name = "slide range"
     cl.use_min_x = cl.use_max_x = True
@@ -457,6 +475,7 @@ def add_r1_handle(rig):
     seg = {n: round(float(j), 2) for n, j in zip(("knuckle", "proximal", "middle", "distal", "tip"), joints)}
     rig["index_curve"] = json.dumps({"joints_mm": seg, "s0": s0, "length": L})
     return {"centre": [round(x, 2) for x in c], "contact_from_tip_mm": round(L - s0, 2),
+            "index_offset_scan": round(hi / deepest0, 4), "deepest_contact_mm": round(deepest0, 2),
             "slide_mm": [round(lo, 2), round(hi, 2)], "turn_deg": R1_TURN_DEG, "keys": steps + 1}
 
 
@@ -622,8 +641,9 @@ def store_scan_pose(rig):
     P = {}
     for pb in rig.pose.bones:
         e = {"loc": list(pb.location), "rot": list(pb.rotation_euler)}
-        if "arch radius" in pb:
-            e["arch radius"] = float(pb["arch radius"])
+        for k in pb.keys():                           # arch radius, index offset, deepest contact
+            if isinstance(pb[k], float):
+                e[k] = float(pb[k])
         P[pb.name] = e
     rig["scan_pose"] = json.dumps(P)
     orig = {}

@@ -1,4 +1,4 @@
-"""render_r1_slide.py: picture of the 'R1 hand' slide: knuckle side | scan | fingertip on R1.
+"""render_r1_slide.py: picture of the index offset: 0 (fingertip on R1) | scan | 1 (deepest contact).
 
     $PY rig_handles/render_r1_slide.py grip_rig_handles.blend OUT.jpg
 """
@@ -21,10 +21,9 @@ def main():
     bpy.ops.wm.open_mainfile(filepath=src)
     rig = bpy.data.objects["grip rig"]
     h = rig.pose.bones["R1 hand"]
-    lo = h.constraints["slide range"].min_x
-    hi = h.constraints["slide range"].max_x
-    poses = [(lo, f"contact {abs(lo):.0f} mm toward the knuckles"), (0.0, "scan result"),
-             (hi, "fingertip on R1")]
+    u0, m = h["index offset"], h["deepest contact"]
+    poses = [(0.0, "index offset 0: fingertip on R1"), (u0, "scan result"),
+             (1.0, "index offset 1: deepest contact")]
     sc, cam = rh.setup_scene()
     rh.RES = RES
     sc.render.resolution_x = sc.render.resolution_y = RES
@@ -35,7 +34,8 @@ def main():
     small = ImageFont.truetype(rh.FONT, 22)
     for x, title in poses:
         bpy.context.window.scene = win
-        h.location[0] = x
+        h["index offset"] = x
+        rig.update_tag()
         bpy.context.view_layer.update()
         objs = [rh.mesh_copy(n, sc, color=(0.85, 0.85, 0.87, 1) if n == "basemesh GripV" else (0.3, 0.3, 0.35, 1))
                 for n in PARTS]
@@ -52,7 +52,7 @@ def main():
         uc, up = world_to_camera_view(sc, cam, c), world_to_camera_view(sc, cam, ps)
         dr.line([uc.x * RES, (1 - uc.y) * RES, up.x * RES, (1 - up.y) * RES], fill=(40, 120, 230), width=3)
         dr.text((14, 10), title, font=font, fill=(0, 0, 0))
-        dr.text((14, 46), f"handle X = {x:+.1f} mm", font=small, fill=(0, 0, 0))
+        dr.text((14, 46), f"index offset {x:.2f}: R1 touches {x * m:.0f} mm from the tip", font=small, fill=(0, 0, 0))
         tiles.append(im)
         for o in objs:
             bpy.data.objects.remove(o)
@@ -60,7 +60,7 @@ def main():
     sheet = Image.new("RGB", (RES * 3, RES + 50), (255, 255, 255))
     for i, im in enumerate(tiles):
         sheet.paste(im, (i * RES, 0))
-    ImageDraw.Draw(sheet).text((14, RES + 12), "Moving the R1 handle slides the hand along the index finger; "
+    ImageDraw.Draw(sheet).text((14, RES + 12), "The index offset slides the hand along the index finger; "
                                "the palm swell (green) follows the palm, so the blue link stretches.",
                                font=ImageFont.truetype(rh.FONT, 22), fill=(0, 0, 0))
     sheet.save(out, quality=90)
