@@ -1,2 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+models/
+out/
+photos/
+data/hand_*.json
+data/hand_relaxed.json
+data/hand.json
+data/hand_on_grip.json
+data/hand_posed_on_grip.json
+data/hand_hold_reference.json
 # Products of heavy runs (see AGENTS.md)
 gen/
