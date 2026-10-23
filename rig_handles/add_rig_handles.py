@@ -251,30 +251,25 @@ def add_trigger_seats(rig):
 
 
 def r1_top_centre():
-    """Centre of R1's top face (the face toward the shoulder, normal +Y), snapped onto R1."""
-    import bmesh
+    """Centre of the outer face of the R1 tab (the part that sticks out of the shoulder, its outermost
+    +Y face): middle of that face's outline, on the face."""
     dg = bpy.context.evaluated_depsgraph_get()
     ob = bpy.data.objects["R1"]
     e = ob.evaluated_get(dg)
-    bm = bmesh.new()
-    bm.from_mesh(e.to_mesh())
-    M = ob.matrix_world
-    A, C = 0.0, Vector((0.0, 0.0, 0.0))
-    for f in bm.faces:
-        n = (M.to_3x3() @ f.normal).normalized()
-        if n.y > 0.8:
-            a = f.calc_area()
-            A += a
-            C += a * (M @ f.calc_center_median())
-    bm.free()
+    me = e.to_mesh()
+    M = np.array(ob.matrix_world)
+    V = np.empty(len(me.vertices) * 3)
+    me.vertices.foreach_get("co", V)
     e.to_mesh_clear()
-    C /= A
-    ok, loc, _, _ = ob.closest_point_on_mesh(M.inverted() @ C)
-    return M @ loc
+    V = V.reshape(-1, 3) @ M[:3, :3].T + M[:3, 3]
+    face = V[V[:, 1] > V[:, 1].max() - 0.05]
+    c = (face.min(0) + face.max(0)) / 2
+    c[1] = V[:, 1].max()
+    return Vector(c.tolist())
 
 
 def add_r1_handle(rig):
-    """'R1 hand' bone at R1's top centre (world-aligned): slides only in X and turns only about X.
+    """'R1 hand' bone at the centre of the R1 tab's outer face (world-aligned): slides only in X and turns only about X.
     Palm swell (so the whole grip shape) and the hand reference hang off it. X max puts the index
     fingertip at the button centre."""
     c = r1_top_centre()
