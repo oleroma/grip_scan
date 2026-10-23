@@ -48,7 +48,7 @@ def mesh_copy(name, sc, dz=0.0, color=(0.8, 0.8, 0.82, 1)):
     mat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.6
     me.materials.append(mat)
     for p in me.polygons:
-        p.use_smooth = True
+        p.use_smooth = False
     sc.collection.objects.link(ob)
     return ob
 
