@@ -39,6 +39,9 @@ The panel is the text block `grip_controls_ui.py`. It registers when the file is
 "Allow Execution" (or "Trust"). Without that, open it in the Text Editor and press Run Script. The handles
 and drivers work without it.
 
+The file opens with the heavy case parts (`case`, `case middle plate`) excluded from the view layer;
+only the basemesh and the buttons are in the scene. Tick them back on in the outliner only to check the case.
+
 ## Mock-up print (collection `mock-up print`, hidden by default)
 
 * `mock-up whole` = posed basemesh (`basemesh variant`) + ABXY, D-pad, Select and Home caps, R2/R4/L2/L4,

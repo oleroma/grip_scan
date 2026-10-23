@@ -640,6 +640,25 @@ def install_ui():
 
 
 # ---------------------------------------------------------------- main
+HEAVY_COLLS = ("case", "case middle plate",       # case top/bottom/plate: heavy booleans, never needed here
+               "buttons", "capacitive", "dpad stick", "battery cover", "cable holder", "pins", "nut lock")
+LIGHT_COLLS = ("basemesh GripV", "parts", "caps", "triggers", "bumpers", "sticks", "scrollwheel", "grip rig", "mock-up print")
+
+
+def light_scene(view_layer):
+    """Exclude the heavy case parts; keep the basemesh and the buttons."""
+    def walk(lc):
+        yield lc
+        for c in lc.children:
+            yield from walk(c)
+    for lc in walk(view_layer.layer_collection):
+        n = lc.collection.name
+        if n in HEAVY_COLLS:
+            lc.exclude = True
+        elif n in LIGHT_COLLS:
+            lc.exclude = False
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     stl_dir = None
@@ -657,6 +676,7 @@ def main():
         c = bpy.data.collections.get(cn)
         if c is not None and c.name not in scene.collection.children:
             scene.collection.children.link(c)
+    light_scene(bpy.context.view_layer)
     rig = bpy.data.objects[RIG]
     assert "fin middle handle" not in rig.data.bones, "handles already added"
     for part, (grp, _) in BUTTONS.items():
