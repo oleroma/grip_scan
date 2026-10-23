@@ -1,0 +1,504 @@
+"""add_rig_handles.py: user-friendly handles on the grip rig + a printable mock-up.
+
+    PY=/path/to/venv/bin/python        # pip install bpy==5.2.2 numpy
+    $PY trigger_controls/build_trigger_controls.py grip_rig_posed.blend build/combined.blend
+    $PY rig_handles/add_rig_handles.py build/combined.blend OUT.blend [--stl-dir DIR]
+
+IN must be a rigged grip file (grip_rig/ pipeline) that already has the R2/R4 'button top control'
+nodes (trigger_controls/). The current pose of IN is kept and stored as the "scan result".
+
+What it adds:
+  handles   ball/target shapes the user drags with G:
+              palm swell, fin middle/ring/pinky handle, stand handle, thenar surface  (grip shape)
+              R2 button top, R4 button top (+ 'arch radius' slider on each)          (buttons)
+            The fin and stand bones now aim at their handle (Damped Track), so a handle drag swings
+            the fin; R2/R4 handles drive 'button top' / 'arch radius' of 'button top control'.
+  panel     3D view sidebar > Grip: named sliders for every handle, reset to scan result / to
+            original GripV, show mock-up, export mock-up STLs (text block 'grip_controls_ui.py').
+  mock-up   'mock-up whole' = posed basemesh + caps, triggers, bumpers, sticks, scroll wheel (no
+            shafts), booleaned into one solid; 'mock-up top' / 'mock-up bottom' split it with the
+            case's own node group 'cut basemesh' (same Z=40 cut as case_top / case_bottom).
+"""
+import json
+import math
+import os
+import sys
+
+import bpy
+import numpy as np
+from mathutils import Matrix, Vector
+
+RIG = "grip rig"
+CAGE = "basemesh GripV"
+SCENE = "GripV"
+WGT_COLL = "grip rig widgets"
+MOCK_COLL = "mock-up print"
+UI_TEXT = "grip_controls_ui.py"
+FINS = ("fin middle", "fin ring", "fin pinky", "stand")
+BUTTONS = {"R2": ("GripV R2 parameters", (15.0, 80.0)), "R4": ("GripV R4 parameters", (40.0, 200.0))}
+BUTTON_RANGE_MM = 10.0
+# objects booleaned into the mock-up: everything the hand touches, never the shafts
+MOCK_PARTS = ["abxy cap up", "abxy cap down", "abxy cap left", "abxy cap right",
+              "dpad cap up", "dpad cap down", "dpad cap left", "dpad cap right",
+              "select cap top left", "select cap top right", "select cap down left", "select cap down right",
+              "home cap", "R2", "R4", "L2", "L4", "R1", "L1", "StickR", "StickL", "scrollwheel"]
+PROTECTED = {"/home/claude/Grip/blender/Grip.blend"}
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def log(*a):
+    print("[rig_handles]", *a, flush=True)
+
+
+# ---------------------------------------------------------------- widgets (wire meshes, mm)
+def circle(r, axis, n=32, c=(0.0, 0.0, 0.0)):
+    pts = []
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        u, v = r * math.cos(a), r * math.sin(a)
+        p = {"x": (0, u, v), "y": (u, 0, v), "z": (u, v, 0)}[axis]
+        pts.append(tuple(p[k] + c[k] for k in range(3)))
+    return pts, [(i, (i + 1) % n) for i in range(n)]
+
+
+def widget(name, parts, coll):
+    V, E = [], []
+    for pts, edges in parts:
+        o = len(V)
+        V += pts
+        E += [(a + o, b + o) for a, b in edges]
+    me = bpy.data.meshes.get(name) or bpy.data.meshes.new(name)
+    me.clear_geometry()
+    me.from_pydata(V, E, [])
+    ob = bpy.data.objects.get(name) or bpy.data.objects.new(name, me)
+    if ob.name not in coll.objects:
+        coll.objects.link(ob)
+    return ob
+
+
+def ball(r, c=(0.0, 0.0, 0.0)):
+    return [circle(r, a, c=c) for a in "xyz"]
+
+
+def arrow(length, axis=1, head=2.0):
+    tip = [0.0, 0.0, 0.0]
+    tip[axis] = length
+    side = [0.0, 0.0, 0.0]
+    side[(axis + 1) % 3] = head * 0.6
+    back = list(tip)
+    back[axis] -= head
+    b1 = [back[k] + side[k] for k in range(3)]
+    b2 = [back[k] - side[k] for k in range(3)]
+    return ([(0, 0, 0), tuple(tip), tuple(b1), tuple(b2)], [(0, 1), (1, 2), (1, 3)])
+
+
+def square(s, axis="z"):
+    h = s / 2
+    q = {"z": [(-h, -h, 0), (h, -h, 0), (h, h, 0), (-h, h, 0)],
+         "y": [(-h, 0, -h), (h, 0, -h), (h, 0, h), (-h, 0, h)]}[axis]
+    return q, [(0, 1), (1, 2), (2, 3), (3, 0)]
+
+
+def make_widgets(scene):
+    coll = bpy.data.collections.get(WGT_COLL) or bpy.data.collections.new(WGT_COLL)
+    if coll.name not in scene.collection.children:
+        scene.collection.children.link(coll)
+    coll.hide_viewport = True
+    coll.hide_render = True
+    w = {
+        "palm": widget("WGT palm swell", ball(7.0) + [arrow(16.0)], coll),
+        "fin": widget("WGT fin handle", ball(4.0) + [arrow(9.0, head=1.6)], coll),
+        "stand": widget("WGT stand handle", ball(5.0) + [square(12.0, "z")], coll),
+        "thenar": widget("WGT thenar", [square(14.0, "z"), circle(3.0, "z"), arrow(10.0, axis=2)], coll),
+        "button": widget("WGT button top", [circle(4.5, "x"), circle(4.5, "y"), circle(4.5, "z"),
+                                             ([(-8, 0, 0), (8, 0, 0)], [(0, 1)]),
+                                             ([(0, -8, 0), (0, 8, 0)], [(0, 1)]),
+                                             ([(0, 0, -8), (0, 0, 8)], [(0, 1)])], coll),
+    }
+    return w
+
+
+# ---------------------------------------------------------------- rig handles
+def bone_axes(b):
+    M = b.matrix_local
+    return Vector(M.col[0][:3]), Vector(M.col[1][:3]), Vector(M.col[2][:3])
+
+
+def add_handle_bones(rig):
+    """Edit mode: fin/stand handles at the bone tips (local Y = outward normal, X = the fin's X),
+    R2/R4 button-top bones at the trigger tops (world-aligned axes)."""
+    tops = {}
+    for part, (grp, _) in BUTTONS.items():
+        tops[part] = Vector(bpy.data.node_groups[grp].nodes["button top control"].inputs["button top"].default_value)
+    rest = {}
+    for n in FINS:
+        x, y, z = bone_axes(rig.data.bones[n])
+        rest[n] = (rig.data.bones[n].tail_local.copy(), x, y, z)
+    view = bpy.context.view_layer
+    view.objects.active = rig
+    bpy.ops.object.mode_set(mode="EDIT")
+    eb = rig.data.edit_bones
+    for n in FINS:
+        tail, x, y, z = rest[n]
+        h = eb.get(n + " handle") or eb.new(n + " handle")
+        h.head = tail
+        h.tail = tail + z * 8.0              # local Y = the fin's outward normal
+        h.align_roll(-y)                     # local X = the fin's X (sideways), local Z = back to palm swell
+        h.parent = eb["palm swell"]
+        h.use_deform = False
+    for part, t in tops.items():
+        b = eb.get(part + " button top") or eb.new(part + " button top")
+        b.head = t
+        b.tail = t + Vector((0.0, 8.0, 0.0))  # world-aligned: local x/y/z = world x/y/z
+        b.roll = 0.0
+        b.parent = eb["grip root"]
+        b.use_deform = False
+    bpy.ops.object.mode_set(mode="OBJECT")
+    return tops
+
+
+def eval_cage():
+    dg = bpy.context.evaluated_depsgraph_get()
+    e = bpy.data.objects[CAGE].evaluated_get(dg)
+    me = e.to_mesh()
+    V = np.empty(len(me.vertices) * 3)
+    me.vertices.foreach_get("co", V)
+    e.to_mesh_clear()
+    return V.reshape(-1, 3)
+
+
+def wire_handles(rig, w):
+    """Move the fin/stand pose onto the handles (same shape), add Damped Track, locks, shapes, limits."""
+    pbs = rig.pose.bones
+    bpy.context.view_layer.update()
+    tips = {n: (pbs[n].tail).copy() for n in FINS}                # armature space, current pose
+    for n in FINS:
+        h = pbs[n + " handle"]
+        h.rotation_mode = "XYZ"
+        par = pbs["palm swell"]
+        rel = par.bone.matrix_local.inverted() @ h.bone.matrix_local
+        M = par.matrix @ rel
+        M.translation = tips[n]
+        h.matrix = M
+        bpy.context.view_layer.update()
+        h.rotation_euler = (0.0, 0.0, 0.0)
+        pb = pbs[n]
+        pb.rotation_euler = (0.0, 0.0, 0.0)
+        pb.location = (0.0, 0.0, 0.0)
+        for c in list(pb.constraints):
+            pb.constraints.remove(c)
+        c = pb.constraints.new("DAMPED_TRACK")
+        c.name = "aim at handle"
+        c.target = rig
+        c.subtarget = h.name
+        c.track_axis = "TRACK_Y"
+        pb.lock_location = (True, True, True)
+        pb.lock_rotation = (True, True, True)
+        h.lock_rotation = (True, True, True)
+        h.lock_scale = (True, True, True)
+        h.lock_location = (False, False, True)                 # along the fin does nothing: locked
+        h.custom_shape = w["stand" if n == "stand" else "fin"]
+        bpy.context.view_layer.update()
+    for n, key in (("palm swell", "palm"), ("thenar surface", "thenar")):
+        pb = pbs[n]
+        pb.lock_rotation = (True, True, True)
+        pb.lock_scale = (True, True, True)
+        pb.custom_shape = w[key]
+        if n == "thenar surface":
+            pb.custom_shape_translation = (0.0, pb.bone.length, 0.0)   # drawn at the thenar end
+    for part in BUTTONS:
+        pb = pbs[part + " button top"]
+        pb.custom_shape = w["button"]
+        pb.lock_rotation = (True, True, True)
+        pb.lock_scale = (True, True, True)
+        c = pb.constraints.new("LIMIT_LOCATION")
+        c.name = "stay near the switch"
+        for ax in "xyz":
+            setattr(c, f"use_min_{ax}", True)
+            setattr(c, f"use_max_{ax}", True)
+            setattr(c, f"min_{ax}", -BUTTON_RANGE_MM)
+            setattr(c, f"max_{ax}", BUTTON_RANGE_MM)
+        c.owner_space = "LOCAL"
+        c.use_transform_limit = True
+    for pb in pbs:
+        pb.use_custom_shape_bone_size = False
+        if pb.custom_shape is not None:
+            pb.custom_shape_wire_width = 2.5
+
+
+def add_button_drivers(rig):
+    pbs = rig.pose.bones
+    for part, (grp, (lo, hi)) in BUTTONS.items():
+        ng = bpy.data.node_groups[grp]
+        node = ng.nodes["button top control"]
+        pb = pbs[part + " button top"]
+        r0 = float(node.inputs["arch radius"].default_value)
+        pb["arch radius"] = r0
+        ui = pb.id_properties_ui("arch radius")
+        ui.update(min=lo, max=hi, soft_min=lo, soft_max=hi, step=50, precision=2, default=r0,
+                  description=f"radius of the {part} trigger arch, mm (default {r0:g})")
+        sock = node.inputs["button top"]
+        for i, ax in enumerate("XYZ"):
+            sock.driver_remove("default_value", i)
+            fc = sock.driver_add("default_value", i)
+            d = fc.driver
+            d.type = "AVERAGE"
+            v = d.variables.new()
+            v.name = "top"
+            v.type = "TRANSFORMS"
+            t = v.targets[0]
+            t.id = rig
+            t.bone_target = pb.name
+            t.transform_type = "LOC_" + ax
+            t.transform_space = "WORLD_SPACE"
+        rs = node.inputs["arch radius"]
+        rs.driver_remove("default_value")
+        fc = rs.driver_add("default_value")
+        d = fc.driver
+        d.type = "AVERAGE"
+        v = d.variables.new()
+        v.name = "radius"
+        v.type = "SINGLE_PROP"
+        v.targets[0].id = rig
+        v.targets[0].data_path = f'pose.bones["{pb.name}"]["arch radius"]'
+
+
+def bone_collections(rig):
+    arm = rig.data
+    for c in list(arm.collections_all):
+        arm.collections.remove(c)
+    groups = {
+        "grip shape (drag these)": ["palm swell", "fin middle handle", "fin ring handle", "fin pinky handle",
+                                    "stand handle", "thenar surface"],
+        "buttons (drag these)": ["R2 button top", "R4 button top"],
+        "mechanics (do not touch)": ["grip root", "fin middle", "fin ring", "fin pinky", "stand", "top back edge"],
+    }
+    for name, bones in groups.items():
+        c = arm.collections.new(name)
+        for b in bones:
+            c.assign(arm.bones[b])
+        c.is_visible = not name.startswith("mechanics")
+    cols = {"fin middle handle": "THEME03", "fin ring handle": "THEME04", "fin pinky handle": "THEME09",
+            "stand handle": "THEME07", "R2 button top": "THEME05", "R4 button top": "THEME05"}
+    for b, p in cols.items():
+        arm.bones[b].color.palette = p
+    arm.show_names = True
+    arm.display_type = "STICK"
+    arm.relation_line_position = "HEAD"
+
+
+def store_scan_pose(rig):
+    P = {}
+    for pb in rig.pose.bones:
+        e = {"loc": list(pb.location), "rot": list(pb.rotation_euler)}
+        if "arch radius" in pb:
+            e["arch radius"] = float(pb["arch radius"])
+        P[pb.name] = e
+    rig["scan_pose"] = json.dumps(P)
+    orig = {}
+    for part, (grp, _) in BUTTONS.items():
+        node = bpy.data.node_groups[grp].nodes["button top control"]
+        # defaults of the original trigger = the 'original (do not edit)' panel values solved forward;
+        # the scan file had no trigger moves, so the current values are the original ones
+        orig[part] = {"arch radius": float(node.inputs["arch radius"].default_value)}
+    rig["original_buttons"] = json.dumps(orig)
+
+
+# ---------------------------------------------------------------- mock-up
+def _sock(sockets, name):
+    for s in sockets:
+        if s.name == name and s.enabled:
+            return s
+    raise KeyError(name)
+
+
+def mock_whole_group():
+    ng = bpy.data.node_groups.get("mock-up whole") or bpy.data.node_groups.new("mock-up whole", "GeometryNodeTree")
+    ng.nodes.clear()
+    ng.interface.clear()
+    ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    L = ng.links
+    go = ng.nodes.new("NodeGroupOutput")
+    go.location = (900, 0)
+    bv = ng.nodes.new("GeometryNodeGroup")
+    bv.node_tree = bpy.data.node_groups["basemesh variant"]
+    bv.location = (-400, 200)
+    bv.label = "posed basemesh"
+    join = ng.nodes.new("GeometryNodeJoinGeometry")
+    join.location = (0, 0)
+    for i, name in enumerate(MOCK_PARTS):
+        oi = ng.nodes.new("GeometryNodeObjectInfo")
+        oi.location = (-400, -120 * i)
+        oi.transform_space = "RELATIVE"
+        oi.inputs["Object"].default_value = bpy.data.objects[name]
+        oi.label = name
+        L.new(_sock(oi.outputs, "Geometry"), join.inputs[0])
+    real = ng.nodes.new("GeometryNodeRealizeInstances")
+    real.location = (200, 0)
+    L.new(join.outputs[0], real.inputs[0])
+    boo = ng.nodes.new("GeometryNodeMeshBoolean")
+    boo.location = (450, 100)
+    boo.operation = "UNION"
+    boo.solver = "MANIFOLD"           # fast (0.2 s) and always manifold; EXACT left non-manifold seams at the sticks
+    L.new(bv.outputs[0], boo.inputs[1])        # UNION: one multi-input ("Mesh 2")
+    L.new(real.outputs[0], boo.inputs[1])
+    L.new(boo.outputs[0], go.inputs[0])
+    return ng
+
+
+def mock_half_group():
+    ng = bpy.data.node_groups.get("mock-up half") or bpy.data.node_groups.new("mock-up half", "GeometryNodeTree")
+    ng.nodes.clear()
+    ng.interface.clear()
+    ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    s = ng.interface.new_socket("bottom", in_out="INPUT", socket_type="NodeSocketBool")
+    s.default_value = False
+    ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    L = ng.links
+    gi = ng.nodes.new("NodeGroupInput")
+    gi.location = (-600, 0)
+    go = ng.nodes.new("NodeGroupOutput")
+    go.location = (400, 0)
+    oi = ng.nodes.new("GeometryNodeObjectInfo")
+    oi.location = (-400, 100)
+    oi.transform_space = "RELATIVE"
+    oi.inputs["Object"].default_value = bpy.data.objects["mock-up whole"]
+    cut = ng.nodes.new("GeometryNodeGroup")
+    cut.node_tree = bpy.data.node_groups["cut basemesh"]   # the case's own top/bottom split (Z = 40)
+    cut.location = (0, 0)
+    L.new(_sock(oi.outputs, "Geometry"), _sock(cut.inputs, "Mesh 1"))
+    L.new(_sock(gi.outputs, "bottom"), _sock(cut.inputs, "bottom"))
+    L.new(_sock(cut.outputs, "Geometry"), go.inputs[0])
+    return ng
+
+
+def mock_object(name, ng, coll, bottom=None):
+    old = bpy.data.objects.get(name)
+    if old is not None:
+        bpy.data.objects.remove(old)
+    me = bpy.data.meshes.new(name)
+    ob = bpy.data.objects.new(name, me)
+    coll.objects.link(ob)
+    m = ob.modifiers.new(ng.name, "NODES")
+    m.node_group = ng
+    if bottom is not None:
+        for it in ng.interface.items_tree:
+            if it.item_type == "SOCKET" and it.in_out == "INPUT" and it.name == "bottom":
+                getattr(m.properties.inputs, it.identifier).value = bool(bottom)
+    return ob
+
+
+def build_mockup(scene):
+    coll = bpy.data.collections.get(MOCK_COLL) or bpy.data.collections.new(MOCK_COLL)
+    if coll.name not in scene.collection.children:
+        scene.collection.children.link(coll)
+    whole = mock_object("mock-up whole", mock_whole_group(), coll)
+    whole.hide_render = True
+    half = mock_half_group()
+    top = mock_object("mock-up top", half, coll, bottom=False)
+    bot = mock_object("mock-up bottom", half, coll, bottom=True)
+    return coll, whole, top, bot
+
+
+def mesh_report(ob):
+    import bmesh
+    dg = bpy.context.evaluated_depsgraph_get()
+    e = ob.evaluated_get(dg)
+    me = e.to_mesh()
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    nm = sum(1 for ed in bm.edges if not ed.is_manifold)
+    vol = bm.calc_volume(signed=True)
+    co = np.array([v.co[:] for v in bm.verts]) if len(bm.verts) else np.zeros((1, 3))
+    r = {"verts": len(bm.verts), "faces": len(bm.faces), "non_manifold_edges": nm,
+         "volume_cm3": round(vol / 1000.0, 2), "bbox_min": np.round(co.min(0), 2).tolist(),
+         "bbox_max": np.round(co.max(0), 2).tolist()}
+    bm.free()
+    e.to_mesh_clear()
+    return r
+
+
+def export_stl(ob, path):
+    view = bpy.context.view_layer
+    for o in view.objects:
+        o.select_set(False)
+    ob.hide_set(False)
+    ob.select_set(True)
+    view.objects.active = ob
+    bpy.ops.wm.stl_export(filepath=path, export_selected_objects=True, apply_modifiers=True, ascii_format=False)
+
+
+# ---------------------------------------------------------------- UI text block
+def install_ui():
+    src = open(os.path.join(HERE, "grip_controls_ui.py")).read()
+    t = bpy.data.texts.get(UI_TEXT) or bpy.data.texts.new(UI_TEXT)
+    t.clear()
+    t.write(src)
+    t.use_module = True                      # registers on load when the file is trusted
+    exec(compile(src, UI_TEXT, "exec"), {"__name__": "__main__"})
+
+
+# ---------------------------------------------------------------- main
+def main():
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+    stl_dir = None
+    if "--stl-dir" in argv:
+        i = argv.index("--stl-dir")
+        stl_dir = argv[i + 1]
+        del argv[i:i + 2]
+    src, dst = argv[0], argv[1]
+    assert os.path.abspath(dst) not in PROTECTED, "refusing to overwrite Grip.blend"
+    bpy.ops.wm.open_mainfile(filepath=src)
+    bpy.data.node_groups["global"].nodes["global parameters"].inputs["variant"].default_value = "GripV"
+    scene = bpy.data.scenes[SCENE]
+    bpy.context.window.scene = scene
+    for cn in ("grip rig", "hand reference (hold_upright)"):
+        c = bpy.data.collections.get(cn)
+        if c is not None and c.name not in scene.collection.children:
+            scene.collection.children.link(c)
+    rig = bpy.data.objects[RIG]
+    assert "fin middle handle" not in rig.data.bones, "handles already added"
+    for part, (grp, _) in BUTTONS.items():
+        assert "button top control" in bpy.data.node_groups[grp].nodes, "run trigger_controls first"
+    bpy.context.view_layer.update()
+    before = eval_cage()
+
+    w = make_widgets(scene)
+    add_handle_bones(rig)
+    wire_handles(rig, w)
+    add_button_drivers(rig)
+    bone_collections(rig)
+    bpy.context.view_layer.update()
+    after = eval_cage()
+    shape_change = float(np.abs(after - before).max())
+    log("cage change from moving the pose onto handles: %.5f mm" % shape_change)
+    store_scan_pose(rig)
+
+    coll, whole, top, bot = build_mockup(scene)
+    install_ui()
+
+    rep = {"cage_change_after_handles_mm": round(shape_change, 5)}
+    bpy.context.view_layer.update()
+    for ob in (whole, top, bot):
+        rep[ob.name] = mesh_report(ob)
+        log(ob.name, rep[ob.name])
+    if stl_dir:
+        os.makedirs(stl_dir, exist_ok=True)
+        for ob in (top, bot):
+            p = os.path.join(stl_dir, ob.name.replace(" ", "_").replace("-", "") + ".stl")
+            export_stl(ob, p)
+            log("wrote", p)
+    coll.hide_viewport = True                 # booleans only run when the user shows the mock-up
+    whole.hide_viewport = True                # only the two halves show
+    for o in bpy.context.view_layer.objects:
+        o.select_set(False)
+    bpy.context.view_layer.objects.active = rig
+    rig.select_set(True)
+    bpy.ops.wm.save_as_mainfile(filepath=dst, compress=True)
+    log("saved", dst)
+    print("REPORT " + json.dumps(rep))
+
+
+if __name__ == "__main__":
+    main()
