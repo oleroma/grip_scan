@@ -8,11 +8,12 @@ IN must be a rigged grip file (grip_rig/ pipeline) that already has the R2/R4 'b
 nodes (trigger_controls/). The current pose of IN is kept and stored as the "scan result".
 
 What it adds:
-  handles   ball/target shapes the user drags with G:
+  handles   ball/target shapes the user drags with G (R2/R4 also rotate with R):
               palm swell, fin middle/ring/pinky handle, stand handle, thenar surface  (grip shape)
               R2 button top, R4 button top (+ 'arch radius' slider on each)          (buttons)
             The fin and stand bones now aim at their handle (Damped Track), so a handle drag swings
-            the fin; R2/R4 handles drive 'button top' / 'arch radius' of 'button top control'.
+            the fin; R2/R4 handles drive 'button top' / 'arch radius' of 'button top control', and
+            their rotation (local X = tip angle offset, local Z = tip shear angle) points the press face.
   panel     3D view sidebar > Grip: named sliders for every handle, reset to scan result / to
             original GripV, show mock-up, export mock-up STLs (text block 'grip_controls_ui.py').
   mock-up   'mock-up whole' = posed basemesh + caps, triggers, bumpers, sticks, scroll wheel (no
@@ -44,6 +45,8 @@ MOCK_PARTS = ["abxy cap up", "abxy cap down", "abxy cap left", "abxy cap right",
               "home cap", "R2", "R4", "L2", "L4", "R1", "L1", "StickR", "StickL", "scrollwheel"]
 PROTECTED = {"/home/claude/Grip/blender/Grip.blend"}
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "..", "trigger_controls"))
+import trigger_model as tm  # noqa: E402
 
 
 def log(*a):
@@ -110,10 +113,10 @@ def make_widgets(scene):
         "fin": widget("WGT fin handle", ball(4.0) + [arrow(9.0, head=1.6)], coll),
         "stand": widget("WGT stand handle", ball(5.0) + [square(12.0, "z")], coll),
         "thenar": widget("WGT thenar", [square(14.0, "z"), circle(3.0, "z"), arrow(10.0, axis=2)], coll),
-        "button": widget("WGT button top", [circle(4.5, "x"), circle(4.5, "y"), circle(4.5, "z"),
-                                             ([(-8, 0, 0), (8, 0, 0)], [(0, 1)]),
-                                             ([(0, -8, 0), (0, 8, 0)], [(0, 1)]),
-                                             ([(0, 0, -8), (0, 0, 8)], [(0, 1)])], coll),
+        # press face (square in local XZ) + arrow along local Y = the face normal
+        "button": widget("WGT button top", [square(10.0, "y"), circle(2.0, "y"), arrow(11.0, head=2.0),
+                                             ([(-7, 0, 0), (7, 0, 0)], [(0, 1)]),
+                                             ([(0, 0, -7), (0, 0, 7)], [(0, 1)])], coll),
     }
     return w
 
@@ -124,9 +127,26 @@ def bone_axes(b):
     return Vector(M.col[0][:3]), Vector(M.col[1][:3]), Vector(M.col[2][:3])
 
 
+def face_params(part):
+    """Original trigger values -> rot0, tip angle offset o0, tip shear sh0, arch angle a0 and the
+    handle's shear angle psi0. The press-face normal is exactly rz(rot) @ rx(o) @ rz(psi) @ +Y with
+    tan(psi) = sh * cos(a - o) (see trigger_model.face_normal), so a bone with rest frame rz(rot0) and
+    euler (x = o, z = psi), mode ZYX, points its Y axis along the face normal."""
+    node = bpy.data.node_groups[BUTTONS[part][0]].nodes["button top control"]
+    g = lambda n: float(node.inputs["original " + n].default_value)  # noqa: E731
+    p = dict(R=g("arch radius"), z=g("shift z"), rot=g("button rotation"), L=g("trigger length"),
+             tb=g("top bevel"), h=g("height"), bro=g("button radius offset"), ph=g("button pressed height"),
+             xoff=g("x offset"), o=g("tip angle offset"), sh=g("tip shear"))
+    _, _, a0 = tm.forward(p, np.zeros(3))
+    o0 = float(node.inputs["tip angle offset"].default_value)
+    sh0 = float(node.inputs["tip shear"].default_value)
+    psi0 = math.atan(sh0 * math.cos(a0 - o0))
+    return dict(rot0=p["rot"], o0=o0, sh0=sh0, a0=float(a0), psi0=psi0)
+
+
 def add_handle_bones(rig):
     """Edit mode: fin/stand handles at the bone tips (local Y = outward normal, X = the fin's X),
-    R2/R4 button-top bones at the trigger tops (world-aligned axes)."""
+    R2/R4 button-top bones at the trigger tops (rest frame = world turned by the trigger's rotation)."""
     tops = {}
     for part, (grp, _) in BUTTONS.items():
         tops[part] = Vector(bpy.data.node_groups[grp].nodes["button top control"].inputs["button top"].default_value)
@@ -149,8 +169,9 @@ def add_handle_bones(rig):
     for part, t in tops.items():
         b = eb.get(part + " button top") or eb.new(part + " button top")
         b.head = t
-        b.tail = t + Vector((0.0, 8.0, 0.0))  # world-aligned: local x/y/z = world x/y/z
-        b.roll = 0.0
+        r0 = face_params(part)["rot0"]
+        b.tail = t + Vector((-math.sin(r0), math.cos(r0), 0.0)) * 8.0   # local Y = rz(rot0) @ +Y
+        b.align_roll(Vector((0.0, 0.0, 1.0)))                            # local Z = world Z
         b.parent = eb["grip root"]
         b.use_deform = False
     bpy.ops.object.mode_set(mode="OBJECT")
@@ -209,7 +230,10 @@ def wire_handles(rig, w):
     for part in BUTTONS:
         pb = pbs[part + " button top"]
         pb.custom_shape = w["button"]
-        pb.lock_rotation = (True, True, True)
+        f = face_params(part)
+        pb.rotation_mode = "ZYX"                      # matrix = Rx(tip angle) @ Rz(shear angle)
+        pb.rotation_euler = (f["o0"], 0.0, f["psi0"])
+        pb.lock_rotation = (False, True, False)
         pb.lock_scale = (True, True, True)
         c = pb.constraints.new("LIMIT_LOCATION")
         c.name = "stay near the switch"
@@ -238,11 +262,15 @@ def add_button_drivers(rig):
         ui.update(min=lo, max=hi, soft_min=lo, soft_max=hi, step=50, precision=2, default=r0,
                   description=f"radius of the {part} trigger arch, mm (default {r0:g})")
         sock = node.inputs["button top"]
+        T0 = [float(x) for x in sock.default_value]
+        bpy.context.view_layer.update()
+        H0 = rig.matrix_world @ pb.head                # what the driver reads at rest (float32)
         for i, ax in enumerate("XYZ"):
             sock.driver_remove("default_value", i)
             fc = sock.driver_add("default_value", i)
             d = fc.driver
-            d.type = "AVERAGE"
+            d.type = "SCRIPTED"                        # original + move: bit-exact at rest
+            d.expression = f"{T0[i]!r} + (top - {float(H0[i])!r})"
             v = d.variables.new()
             v.name = "top"
             v.type = "TRANSFORMS"
@@ -251,6 +279,25 @@ def add_button_drivers(rig):
             t.bone_target = pb.name
             t.transform_type = "LOC_" + ax
             t.transform_space = "WORLD_SPACE"
+        f = face_params(part)
+        x0 = float(pb.rotation_euler[0])              # float32 as stored: default gives o0 exactly
+        z0 = float(pb.rotation_euler[2])
+        t0 = math.tan(z0) / math.cos(f["a0"] - x0)
+        exprs = {"tip angle offset": f"{f['o0']!r} + (x - {x0!r})",
+                 "tip shear": f"{f['sh0']!r} + tan(z) / cos({f['a0']!r} - x) - {t0!r}"}
+        for sname, expr in exprs.items():
+            so = node.inputs[sname]
+            so.driver_remove("default_value")
+            fc = so.driver_add("default_value")
+            d = fc.driver
+            d.type = "SCRIPTED"
+            d.expression = expr                       # simple expression: runs without Python
+            for vn, i in (("x", 0), ("z", 2)):
+                v = d.variables.new()
+                v.name = vn
+                v.type = "SINGLE_PROP"
+                v.targets[0].id = rig
+                v.targets[0].data_path = f'pose.bones["{pb.name}"].rotation_euler[{i}]'
         rs = node.inputs["arch radius"]
         rs.driver_remove("default_value")
         fc = rs.driver_add("default_value")
@@ -300,7 +347,9 @@ def store_scan_pose(rig):
         node = bpy.data.node_groups[grp].nodes["button top control"]
         # defaults of the original trigger = the 'original (do not edit)' panel values solved forward;
         # the scan file had no trigger moves, so the current values are the original ones
-        orig[part] = {"arch radius": float(node.inputs["arch radius"].default_value)}
+        pb = rig.pose.bones[part + " button top"]
+        orig[part] = {"arch radius": float(node.inputs["arch radius"].default_value),
+                      "rot": list(pb.rotation_euler)}
     rig["original_buttons"] = json.dumps(orig)
 
 

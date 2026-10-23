@@ -24,10 +24,12 @@ GRIP = [
                                                ("loc", 1, "along B")]),
 ]
 BUTTONS = [
-    ("R2 button top", "R2 trigger", [("loc", 0, "X  sideways"), ("loc", 1, "Y  toward bumpers"),
-                                      ("loc", 2, "Z  toward face"), ("prop", "arch radius", "arch radius")]),
-    ("R4 button top", "R4 trigger", [("loc", 0, "X  sideways"), ("loc", 1, "Y  toward bumpers"),
-                                      ("loc", 2, "Z  toward face"), ("prop", "arch radius", "arch radius")]),
+    ("R2 button top", "R2 trigger", [("loc", 0, "across the face"), ("loc", 1, "out toward the finger"),
+                                      ("loc", 2, "up toward the face buttons"), ("prop", "arch radius", "arch radius"),
+                                      ("rot", 0, "tilt (tip angle offset)"), ("rot", 2, "sideways tilt (tip shear)")]),
+    ("R4 button top", "R4 trigger", [("loc", 0, "across the face"), ("loc", 1, "out toward the finger"),
+                                      ("loc", 2, "up toward the face buttons"), ("prop", "arch radius", "arch radius"),
+                                      ("rot", 0, "tilt (tip angle offset)"), ("rot", 2, "sideways tilt (tip shear)")]),
 ]
 
 
@@ -75,6 +77,7 @@ class GRIP_OT_reset_original(bpy.types.Operator):
             pb = rig.pose.bones.get(part + " button top")
             if pb is not None:
                 pb["arch radius"] = v["arch radius"]
+                pb.rotation_euler = v.get("rot", (0.0, 0.0, 0.0))
         rig.update_tag()
         return {"FINISHED"}
 
@@ -187,6 +190,8 @@ def draw_bones(layout, rig, spec):
         for kind, idx, label in rows:
             if kind == "loc":
                 col.prop(pb, "location", index=idx, text=label + " (mm)")
+            elif kind == "rot":
+                col.prop(pb, "rotation_euler", index=idx, text=label)
             else:
                 col.prop(pb, f'["{idx}"]', text=label + " (mm)")
 
@@ -229,7 +234,8 @@ class GRIP_PT_buttons(bpy.types.Panel):
     bl_parent_id = "GRIP_PT_controls"
 
     def draw(self, context):
-        self.layout.label(text="Ball = centre of the button's press face")
+        self.layout.label(text="Handle = centre of the press face, arrow = where it faces")
+        self.layout.label(text="G moves it, R rotates it (R X X / R Z Z for one axis)")
         draw_bones(self.layout, rig_obj(), BUTTONS)
 
 

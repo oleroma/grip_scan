@@ -12,12 +12,15 @@ Drag a ball with **G**, or use the sliders in the 3D view sidebar (**N**) > **Gr
 | `fin middle handle`, `fin ring handle`, `fin pinky handle` | the lobe that finger curls round (the fin bone aims at its ball) | out / in, sideways |
 | `stand handle` | the low end of the handle (it stands on this and the pinky fins) | out / in, sideways |
 | `thenar surface` (square) | the surface under the thumb base | out / in, along A, along B |
-| `R2 button top`, `R4 button top` (crosshair) | centre of the trigger's press face; the arch is refitted to the switch | X sideways, Y toward bumpers, Z toward face, arch radius |
+| `R2 button top`, `R4 button top` (square + arrow) | centre of the trigger's press face; the arrow is the face direction. G moves it (the arch is refitted to the switch), R rotates it | across the face, out toward the finger, up toward the face buttons, arch radius, tilt (= tip angle offset), sideways tilt (= tip shear) |
 
 * The fin/stand bones are aimed at their handle with a Damped Track constraint, so dragging the ball swings
   the fin; the ball's move along the fin is locked (it would do nothing).
-* `R2/R4 button top` drive the inputs `button top` and `arch radius` of the node `button top control` in
-  `GripV R2/R4 parameters` (drivers, no Python needed). They stay within 10 mm of the original top
+* `R2/R4 button top` drive the inputs `button top`, `arch radius`, `tip angle offset` and `tip shear` of the
+  node `button top control` in `GripV R2/R4 parameters` (drivers with simple expressions, no Python needed).
+  The bone's rest frame is the world turned by the trigger's `button rotation`; euler mode ZYX, X = tip angle
+  offset (absolute), Z = shear angle psi with tan(psi) = tip shear * cos(a - tip angle offset). The arrow
+  matches the built press face within 0.5 deg; at the defaults all triggers and cutters are bit-exact. They stay within 10 mm of the original top
   (Limit Location). L2/L4 mirror.
 * Bone collections: `grip shape (drag these)`, `buttons (drag these)`, `mechanics (do not touch)` (hidden).
 * Panel buttons: **Back to scan result** (the pose stored in `grip rig["scan_pose"]`), **Back to
