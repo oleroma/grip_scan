@@ -38,6 +38,9 @@ UI_TEXT = "grip_controls_ui.py"
 FINS = ("fin middle", "fin ring", "fin pinky", "stand")
 BUTTONS = {"R2": ("GripV R2 parameters", (15.0, 80.0)), "R4": ("GripV R4 parameters", (40.0, 200.0))}
 BUTTON_RANGE_MM = 10.0
+R1_SLIDE_MIN_MM = -5.0    # R1 hand handle: slide toward -X (the whole hand + palm swell follow)
+R1_TURN_DEG = 15.0        # ... and turn about X by at most this much either way
+HAND_OBJECTS = ("hand rig", "hold marker: R2 press", "hold marker: R4 press", "hold marker: palm swell")
 MAX_PRESS_DEG = 30.0      # warn when the press face is tilted more than this from the travel direction
 SEAT_FULL_MM, SEAT_ZERO_MM = 6.0, 20.0   # skin this close to a trigger follows it fully, fading to 0 here
 # objects booleaned into the mock-up: everything the hand touches, never the shafts
@@ -114,6 +117,10 @@ def make_widgets(scene):
         "palm": widget("WGT palm swell", ball(7.0) + [arrow(16.0)], coll),
         "fin": widget("WGT fin handle", ball(4.0) + [arrow(9.0, head=1.6)], coll),
         "stand": widget("WGT stand handle", ball(5.0) + [square(12.0, "z")], coll),
+        # R1 hand handle: double arrow along X (slide) + ring around X (turn)
+        "r1": widget("WGT R1 hand", [circle(6.0, "x"), circle(2.5, "x"),
+                                     ([(-12, 0, 0), (12, 0, 0), (9, 2, 0), (9, -2, 0), (-9, 2, 0), (-9, -2, 0)],
+                                      [(0, 1), (1, 2), (1, 3), (0, 4), (0, 5)])], coll),
         "thenar": widget("WGT thenar", [square(14.0, "z"), circle(3.0, "z"), arrow(10.0, axis=2)], coll),
         # press face (square in local XZ) + arrow along local Y = the face normal
         "button": widget("WGT button top", [square(10.0, "y"), circle(2.0, "y"), arrow(11.0, head=2.0),
@@ -241,6 +248,85 @@ def add_trigger_seats(rig):
         c.subtarget = part + " button top"
         pb.lock_location = pb.lock_rotation = pb.lock_scale = (True, True, True)
     return {p: int((w > 1e-3).sum()) for p, w in seat.items()}
+
+
+def r1_top_centre():
+    """Centre of R1's top face (the face toward the shoulder, normal +Y), snapped onto R1."""
+    import bmesh
+    dg = bpy.context.evaluated_depsgraph_get()
+    ob = bpy.data.objects["R1"]
+    e = ob.evaluated_get(dg)
+    bm = bmesh.new()
+    bm.from_mesh(e.to_mesh())
+    M = ob.matrix_world
+    A, C = 0.0, Vector((0.0, 0.0, 0.0))
+    for f in bm.faces:
+        n = (M.to_3x3() @ f.normal).normalized()
+        if n.y > 0.8:
+            a = f.calc_area()
+            A += a
+            C += a * (M @ f.calc_center_median())
+    bm.free()
+    e.to_mesh_clear()
+    C /= A
+    ok, loc, _, _ = ob.closest_point_on_mesh(M.inverted() @ C)
+    return M @ loc
+
+
+def add_r1_handle(rig):
+    """'R1 hand' bone at R1's top centre (world-aligned): slides only in X and turns only about X.
+    Palm swell (so the whole grip shape) and the hand reference hang off it. X max puts the index
+    fingertip at the button centre."""
+    c = r1_top_centre()
+    mk = bpy.data.objects.get("hold marker: R1 target")
+    if mk is not None:
+        mk.matrix_world.translation = c                 # the R1 target now sits on R1's top centre
+    hand = bpy.data.objects.get("hand rig")
+    tip = hand.matrix_world @ hand.pose.bones["index_distal"].tail if hand else None
+    slide_max = float(c.x - tip.x) if tip is not None else 10.0
+    view = bpy.context.view_layer
+    view.objects.active = rig
+    bpy.ops.object.mode_set(mode="EDIT")
+    eb = rig.data.edit_bones
+    b = eb.get("R1 hand") or eb.new("R1 hand")
+    b.head = c
+    b.tail = c + Vector((0.0, 10.0, 0.0))
+    b.roll = 0.0
+    b.parent = eb["grip root"]
+    b.use_deform = False
+    eb["palm swell"].parent = b                         # rest unchanged, so the pose is unchanged
+    bpy.ops.object.mode_set(mode="OBJECT")
+    pb = rig.pose.bones["R1 hand"]
+    pb.rotation_mode = "XYZ"
+    pb.lock_location = (False, True, True)
+    pb.lock_rotation = (False, True, True)
+    pb.lock_scale = (True, True, True)
+    cl = pb.constraints.new("LIMIT_LOCATION")
+    cl.name = "slide range"
+    cl.use_min_x = cl.use_max_x = True
+    cl.min_x, cl.max_x = R1_SLIDE_MIN_MM, slide_max
+    cl.owner_space = "LOCAL"
+    cl.use_transform_limit = True
+    cr = pb.constraints.new("LIMIT_ROTATION")
+    cr.name = "turn range"
+    cr.use_limit_x = True
+    cr.min_x, cr.max_x = -math.radians(R1_TURN_DEG), math.radians(R1_TURN_DEG)
+    cr.owner_space = "LOCAL"
+    cr.use_transform_limit = True
+    view.update()
+    for n in HAND_OBJECTS:                              # the hand moves with the handle
+        ob = bpy.data.objects.get(n)
+        if ob is None:
+            continue
+        M = ob.matrix_world.copy()
+        ob.parent = rig
+        ob.parent_type = "BONE"
+        ob.parent_bone = "R1 hand"
+        view.update()
+        ob.matrix_world = M
+    view.update()
+    return {"centre": [round(x, 2) for x in c], "slide_mm": [R1_SLIDE_MIN_MM, round(slide_max, 2)],
+            "turn_deg": R1_TURN_DEG}
 
 
 def eval_cage():
@@ -383,6 +469,7 @@ def bone_collections(rig):
         "grip shape (drag these)": ["palm swell", "fin middle handle", "fin ring handle", "fin pinky handle",
                                     "stand handle", "thenar surface"],
         "buttons (drag these)": ["R2 button top", "R4 button top"],
+        "hand on R1 (drag this)": ["R1 hand"],
         "mechanics (do not touch)": ["grip root", "fin middle", "fin ring", "fin pinky", "stand", "top back edge",
                                      "R2 seat", "R4 seat"],
     }
@@ -586,6 +673,11 @@ def main():
     add_handle_bones(rig)
     wire_handles(rig, w)
     log("trigger seats (cage vertices that follow):", add_trigger_seats(rig))
+    log("R1 hand handle:", add_r1_handle(rig))
+    rig.pose.bones["R1 hand"].custom_shape = w["r1"]
+    rig.pose.bones["R1 hand"].use_custom_shape_bone_size = False
+    rig.pose.bones["R1 hand"].custom_shape_wire_width = 2.5
+    rig.data.bones["R1 hand"].color.palette = "THEME01"
     add_button_drivers(rig)
     bone_collections(rig)
     bpy.context.view_layer.update()

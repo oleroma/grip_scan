@@ -15,6 +15,10 @@ MOCK_COLL = "mock-up print"
 CASE_COLLS = ("case", "parts")
 
 # (bone, title, [(kind, index, label), ...])  kind: loc = pose location (mm), prop = custom property
+HAND = [
+    ("R1 hand", "Hand on R1", [("loc", 0, "slide along R1 (max = fingertip on centre)"),
+                               ("rot", 0, "turn about R1")]),
+]
 GRIP = [
     ("palm swell", "Palm swell", [("loc", 1, "out / in"), ("loc", 0, "along A"), ("loc", 2, "along B")]),
     ("fin middle handle", "Middle finger fin", [("loc", 1, "out / in"), ("loc", 0, "sideways")]),
@@ -246,6 +250,25 @@ class GRIP_PT_controls(bpy.types.Panel):
         row.operator("grip.reset_original", icon="CANCEL")
 
 
+class GRIP_PT_hand(bpy.types.Panel):
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Grip"
+    bl_label = "Hand on R1"
+    bl_parent_id = "GRIP_PT_controls"
+
+    def draw(self, context):
+        rig = rig_obj()
+        hand = bpy.data.objects.get("hand rig")
+        pb = rig.pose.bones.get("R1 hand")
+        if hand is not None and pb is not None:
+            tip = hand.matrix_world @ hand.pose.bones["index_distal"].tail
+            c = rig.matrix_world @ pb.bone.head_local       # R1 top centre (R1 never moves)
+            self.layout.label(text=f"index fingertip is {c.x - tip.x:.1f} mm past the R1 centre")
+        self.layout.label(text="Moves the whole hand and the palm swell with it")
+        draw_bones(self.layout, rig, HAND)
+
+
 class GRIP_PT_shape(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -304,7 +327,7 @@ class GRIP_PT_mockup(bpy.types.Panel):
 
 
 CLASSES = (GRIP_OT_reset_scan, GRIP_OT_reset_original, GRIP_OT_reset_one, GRIP_OT_select,
-           GRIP_OT_export_mockup, GRIP_PT_controls, GRIP_PT_shape, GRIP_PT_buttons, GRIP_PT_mockup)
+           GRIP_OT_export_mockup, GRIP_PT_controls, GRIP_PT_hand, GRIP_PT_shape, GRIP_PT_buttons, GRIP_PT_mockup)
 
 
 def register():

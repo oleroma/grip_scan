@@ -11,6 +11,7 @@ Drag a ball with **G**, or use the sliders in the 3D view sidebar (**N**) > **Gr
 | `palm swell` (red ball + arrow) | the whole palm swell; every grip handle hangs off it | out / in, along A, along B |
 | `fin middle handle`, `fin ring handle`, `fin pinky handle` | the lobe that finger curls round (the fin bone aims at its ball) | out / in, sideways |
 | `stand handle` | the low end of the handle (it stands on this and the pinky fins) | out / in, sideways |
+| `R1 hand` (double arrow + ring, on R1's top centre) | slides the whole hand and the palm swell (so the whole grip shape) along X, and turns them about the X axis through R1. X max puts the index fingertip on the R1 centre; range -5 mm .. max, turn +-15 deg | slide along R1, turn about R1 |
 | `thenar surface` (square) | the surface under the thumb base | out / in, along A, along B |
 | `R2 button top`, `R4 button top` (square + arrow) | centre of the trigger's press face; the arrow is the face direction. G moves it (the arch is refitted to the switch), R rotates it | across the face, out toward the finger, up toward the face buttons, arch radius, tilt (= tip angle offset), sideways tilt (= tip shear) |
 
