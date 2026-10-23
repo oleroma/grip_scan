@@ -1,6 +1,7 @@
 .venv/
 __pycache__/
 *.pyc
+build/
 models/
 out/
 photos/
