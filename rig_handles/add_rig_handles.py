@@ -336,10 +336,16 @@ def add_r1_handle(rig):
         b.use_deform = deform
         return b
 
+    P0v = Vector(curve(s0).tolist())                  # the index axis at the contact: the hand pivots here
     bone("R1 hand", c, "grip root")
     bone("R1 turn", c, "grip root")
-    bone("hand mover", c, "R1 turn")
-    bone("palm target", ps_rest, "hand mover", 6.0)
+    aim = bone("palm aim", P0v, "R1 turn")
+    aim.tail = P0v + (ps_rest - P0v).normalized() * 10.0
+    bone("hand mover", c, "palm aim")
+    bone("palm slide", c, "R1 turn")                  # the slide alone (no palm aim): carries the palm point
+    bone("palm target", ps_rest, "palm slide", 6.0)
+    pd = bone("palm drag", ps_rest, "R1 turn", 6.0)
+    pd.tail, pd.roll = eb["palm swell"].tail.copy(), eb["palm swell"].roll
     bone("palm follow", ps_rest, "grip root", 6.0)
     link = bone("R1 palm link", c, "grip root")
     link.tail = ps_rest.copy()
@@ -433,20 +439,45 @@ def add_r1_handle(rig):
     ad.action = keep_act
     hm.location = (0.0, 0.0, 0.0)
     hm.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
-    ca = hm.constraints.new("ACTION")
-    ca.name = "slide along the finger"
-    ca.target, ca.subtarget = rig, "R1 hand"
-    ca.transform_channel = "LOCATION_X"
-    ca.target_space = "LOCAL"
-    ca.action = act
-    if slot is not None:
-        try:
-            ca.action_slot = slot
-        except Exception:
-            pass
-    ca.min, ca.max = a_lo, a_hi
-    ca.frame_start, ca.frame_end = 1, steps + 1
-    ca.mix_mode = "BEFORE_FULL"
+    for owner in (hm, pbs["palm slide"]):
+        ca = owner.constraints.new("ACTION")
+        ca.name = "slide along the finger"
+        ca.target, ca.subtarget = rig, "R1 hand"
+        ca.transform_channel = "LOCATION_X"
+        ca.target_space = "LOCAL"
+        ca.action = act
+        if slot is not None:
+            try:
+                ca.action_slot = slot
+            except Exception:
+                pass
+        ca.min, ca.max = a_lo, a_hi
+        ca.frame_start, ca.frame_end = 1, steps + 1
+        ca.mix_mode = "BEFORE_FULL"
+
+    # dragging the palm swell pivots the hand about the index contact: 'palm drag' = the palm point plus the
+    # palm swell's own move since the scan, 'palm aim' (parent of 'hand mover') aims at it
+    ps = pbs["palm swell"]
+    ps_scan = [float(v) for v in ps.location]          # float32 as stored: 0 move at the scan exactly
+    pdb = pbs["palm drag"]
+    for i in range(3):
+        _prop_driver(pdb, "location", "v", rig, 'pose.bones["palm swell"].location[%d]' % i,
+                     expr="v - %r" % ps_scan[i], index=i)
+    dt = pbs["palm aim"].constraints.new("DAMPED_TRACK")
+    dt.name = "turn the hand toward the palm swell"
+    dt.target, dt.subtarget = rig, "palm drag"
+    dt.track_axis = "TRACK_Y"
+    ps["hand follows"] = 1.0
+    ps.id_properties_ui("hand follows").update(
+        min=0.0, max=1.0, soft_min=0.0, soft_max=1.0, default=1.0, precision=2,
+        description="1 = dragging the palm swell turns the hand about the index contact on R1; 0 = the hand stays")
+    d = _prop_driver(dt, "influence", "x", rig, 'pose.bones["palm swell"].location[0]',
+                     expr="f * (abs(x - %r) + abs(y - %r) + abs(z - %r) > 1e-6)" % tuple(ps_scan))
+    for vn, dp in (("y", "location[1]"), ("z", "location[2]"), ("f", '["hand follows"]')):
+        v = d.variables.new()                          # off at the scan, so the scan pose stays bit-exact
+        v.name, v.type = vn, "SINGLE_PROP"
+        v.targets[0].id = rig
+        v.targets[0].data_path = 'pose.bones["palm swell"]' + ("." + dp if not dp.startswith("[") else dp)
 
     pf = pbs["palm follow"]
     cf = pf.constraints.new("COPY_LOCATION")
@@ -456,7 +487,8 @@ def add_r1_handle(rig):
     st = pbs["R1 palm link"].constraints.new("STRETCH_TO")
     st.name = "stretch to the palm"
     st.target, st.subtarget = rig, "palm follow"
-    for n in ("R1 turn", "hand mover", "palm target", "palm follow", "R1 palm link"):
+    for n in ("R1 turn", "hand mover", "palm target", "palm follow", "R1 palm link", "palm aim", "palm slide",
+              "palm drag"):
         p = pbs[n]
         p.lock_location = p.lock_rotation = p.lock_scale = (True, True, True)
         p.lock_rotation_w = True
@@ -744,7 +776,8 @@ def bone_collections(rig):
                                     "stand handle", "thenar surface"],
         "buttons (drag these)": ["R2 button top", "R4 button top", "R2 face", "R4 face"],
         "hand on R1 (drag this)": ["R1 hand", "R1 palm link"],
-        "mechanics (do not touch)": ["R1 turn", "hand mover", "palm target", "palm follow", "grip root", "fin middle", "fin ring", "fin pinky", "stand", "top back edge",
+        "mechanics (do not touch)": ["R1 turn", "hand mover", "palm target", "palm follow", "palm aim", "palm slide",
+                                     "palm drag", "grip root", "fin middle", "fin ring", "fin pinky", "stand", "top back edge",
                                      "R2 seat", "R4 seat", "R2 follow", "R4 follow", "R2 pivot", "R4 pivot",
                                      "R2 tilt", "R4 tilt", "R2 swing", "R4 swing"],
     }

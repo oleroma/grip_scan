@@ -26,6 +26,10 @@ Drag a ball with **G**, or use the sliders in the 3D view sidebar (**N**) > **Gr
 * Bone collections: `grip shape (drag these)`, `buttons (drag these)`, `mechanics (do not touch)` (hidden).
 * Panel buttons: **Back to scan result** (the pose stored in `grip rig["scan_pose"]`), **Back to
   original GripV**, per-handle reset, select.
+* Dragging the palm swell turns the hand about the index contact on R1 (`palm aim`, parent of `hand mover`,
+  Damped Track to `palm drag` = the palm point plus the palm swell's move since the scan), so the index
+  stays on R1 and R2/R4 follow the fingertips. The palm swell itself is exactly where you drag it; the part
+  of the move toward / away from R1 cannot be a turn, so the blue link stretches. Off (bit-exact) at the scan.
 * R2/R4 follow the hand: `<part> follow` rides on `hand mover`, and `<part> pivot` (the button top's parent)
   copies its position with influence = the button's **follow hand** (0..1, default 1). So the index offset
   and the turn about R1 carry the triggers with the middle and ring fingertips (up to 12.6 mm at offset 0).
@@ -89,6 +93,9 @@ pip install bpy==5.2.2 numpy pillow
 python trigger_controls/build_trigger_controls.py grip_rig_posed_smooth.blend build/combined.blend
 python rig_handles/add_rig_handles.py build/combined.blend build/grip_rig_handles.blend --stl-dir build/stl
 python rig_handles/render_handles.py build/grip_rig_handles.blend build/handles_sheet.jpg
+python rig_handles/render_r1_slide.py build/grip_rig_handles.blend build/r1_slide.jpg      # index offset 0 / scan / 1
+python rig_handles/render_follow.py build/grip_rig_handles.blend build/follow.jpg          # R2/R4 following
+python rig_handles/render_palm_drag.py build/grip_rig_handles.blend build/palm_drag.jpg    # palm swell drag
 ```
 
 `add_rig_handles.py` keeps the input's pose as the scan result (moving it onto the handles changes the

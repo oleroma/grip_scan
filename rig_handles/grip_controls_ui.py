@@ -21,7 +21,7 @@ HAND = [
                                ("rot", 0, "turn about R1")]),
 ]
 GRIP = [
-    ("palm swell", "Palm swell", [("loc", 1, "out / in"), ("loc", 0, "along A"), ("loc", 2, "along B")]),
+    ("palm swell", "Palm swell", [("num", "hand follows", "hand follows (turns about R1)"), ("loc", 1, "out / in"), ("loc", 0, "along A"), ("loc", 2, "along B")]),
     ("fin middle handle", "Middle finger fin", [("loc", 1, "out / in"), ("loc", 0, "sideways")]),
     ("fin ring handle", "Ring finger fin", [("loc", 1, "out / in"), ("loc", 0, "sideways")]),
     ("fin pinky handle", "Pinky fin", [("loc", 1, "out / in"), ("loc", 0, "sideways")]),
@@ -143,7 +143,7 @@ class GRIPRIG_OT_reset_scan(bpy.types.Operator):
 class GRIPRIG_OT_reset_original(bpy.types.Operator):
     bl_idname = "griprig.reset_original"
     bl_label = "Back to original GripV"
-    bl_description = "Clear every move: the grip and the R2/R4 triggers become the original GripV"
+    bl_description = "Clear every move: the grip and the R2/R4 triggers become the original GripV (the hand stays at the scan; palm swell > hand follows is set to 0)"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -152,6 +152,9 @@ class GRIPRIG_OT_reset_original(bpy.types.Operator):
         for pb in rig.pose.bones:
             pb.location = (0.0, 0.0, 0.0)
             pb.rotation_euler = (0.0, 0.0, 0.0)
+        ps = rig.pose.bones.get("palm swell")
+        if ps is not None and "hand follows" in ps:
+            ps["hand follows"] = 0.0          # the hand stays at the scan, so R2/R4 are the original ones
         scan = json.loads(rig["scan_pose"]).get("R1 hand", {})
         apply_pose(rig, {"R1 hand": {"loc": [0.0] * 3, "rot": [0.0] * 3,
                                      **{k: v for k, v in scan.items() if k not in ("loc", "rot")}}})
