@@ -25,8 +25,14 @@ Drag a ball with **G**, or use the sliders in the 3D view sidebar (**N**) > **Gr
 * Bone collections: `grip shape (drag these)`, `buttons (drag these)`, `mechanics (do not touch)` (hidden).
 * Panel buttons: **Back to scan result** (the pose stored in `grip rig["scan_pose"]`), **Back to
   original GripV**, per-handle reset, select.
-* Everything protected by `grip rig pins` stays bit-exact: exception zone, flat top (Z 59.04), battery,
-  skin around the triggers. The skin next to R2/R4 does not follow a moved trigger.
+* Skin under the triggers follows them: hidden deform bones `R2 seat` / `R4 seat` copy the button handle's
+  move; cage points within 6 mm of the trigger follow fully, fading to 0 at 20 mm (weight taken only from
+  `grip root`, so the scan pose is unchanged). Moving a top 3 mm moves the skin up to 2.2 mm (R2) / 3 mm (R4):
+  the subdivision and the exception zone hold some of it back.
+* Press angle: the panel shows the angle between each press face and the direction the face travels when
+  pressed (arch tangent); defaults R2 21 deg, R4 17 deg; above `grip rig["max press angle"]` (30) it says
+  TOO STEEP.
+* Everything protected by `grip rig pins` stays bit-exact: exception zone, flat top (Z 59.04), battery.
 
 The panel is the text block `grip_controls_ui.py`. It registers when the file is opened with
 "Allow Execution" (or "Trust"). Without that, open it in the Text Editor and press Run Script. The handles

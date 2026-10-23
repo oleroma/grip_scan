@@ -5,6 +5,7 @@ block 'grip_controls_ui.py' (registers on load when the file is trusted; otherwi
 Text Editor and press Run Script).
 """
 import json
+import math
 import os
 
 import bpy
@@ -31,6 +32,36 @@ BUTTONS = [
                                       ("loc", 2, "up toward the face buttons"), ("prop", "arch radius", "arch radius"),
                                       ("rot", 0, "tilt (tip angle offset)"), ("rot", 2, "sideways tilt (tip shear)")]),
 ]
+
+
+def press_angle(part):
+    """Angle (deg) between the press face normal and the direction the face travels when pressed
+    (the arch tangent at the face). Same math as trigger_controls/trigger_model.py inverse()."""
+    node = bpy.data.node_groups[f"GripV {part} parameters"].nodes["button top control"]
+    g = lambda n: float(node.inputs[n].default_value)  # noqa: E731
+    tb, h, bro, ph, xo = g("top bevel"), g("height"), g("button radius offset"), g("button pressed height"), g("x offset")
+    o, sh, R = g("tip angle offset"), g("tip shear"), g("arch radius")
+    smd = node.inputs["SMD button"].default_value.matrix_world.translation
+    top = node.inputs["button top"].default_value
+    d = [top[0] - smd[0], top[1] - smd[1], top[2] - (smd[2] - 1.6 - ph)]
+    rho = R - h / 2
+    a = 0.0
+    for _ in range(8):
+        v = (-sh, 1.0, -math.tan(a - o))
+        ln = math.sqrt(sum(c * c for c in v))
+        n = (v[0] / ln, (v[1] * math.cos(a) - v[2] * math.sin(a)) / ln, (v[1] * math.sin(a) + v[2] * math.cos(a)) / ln)
+        qx = xo + tb * n[0]
+        qy = math.sqrt(max(d[0] ** 2 + d[1] ** 2 - qx ** 2, 0.0))
+        U = qy - tb * n[1] + bro
+        V = d[2] - tb * n[2]
+        W = max(math.hypot(U, V), 1e-6)
+        xx = (R * R - rho * rho + W * W) / (2 * W)
+        yy = math.sqrt(max(R * R - xx * xx, 0.0))
+        cy = (xx * U - yy * V) / W
+        cz = (xx * V + yy * U) / W
+        a = math.atan2(U - cy, cz - V)
+    # in the arch frame the travel direction is +Y and the normal is (-sh, 1, -tan(a - o))
+    return math.degrees(math.acos(1.0 / math.sqrt(sh * sh + 1.0 + math.tan(a - o) ** 2)))
 
 
 def rig_obj():
@@ -236,7 +267,21 @@ class GRIP_PT_buttons(bpy.types.Panel):
     def draw(self, context):
         self.layout.label(text="Handle = centre of the press face, arrow = where it faces")
         self.layout.label(text="G moves it, R rotates it (R X X / R Z Z for one axis)")
-        draw_bones(self.layout, rig_obj(), BUTTONS)
+        rig = rig_obj()
+        lim = float(rig.get("max press angle", 30.0))
+        box = self.layout.box()
+        box.label(text="Press angle = face vs the way the button moves")
+        for part in ("R2", "R4"):
+            try:
+                ang = press_angle(part)
+            except Exception:
+                continue
+            row = box.row()
+            row.alert = ang > lim
+            row.label(text=f"{part}: {ang:.0f} deg" + ("  TOO STEEP" if ang > lim else "  ok"),
+                      icon="ERROR" if ang > lim else "CHECKMARK")
+        box.prop(rig, '["max press angle"]', text="max press angle (deg)")
+        draw_bones(self.layout, rig, BUTTONS)
 
 
 class GRIP_PT_mockup(bpy.types.Panel):

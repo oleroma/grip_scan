@@ -38,6 +38,8 @@ UI_TEXT = "grip_controls_ui.py"
 FINS = ("fin middle", "fin ring", "fin pinky", "stand")
 BUTTONS = {"R2": ("GripV R2 parameters", (15.0, 80.0)), "R4": ("GripV R4 parameters", (40.0, 200.0))}
 BUTTON_RANGE_MM = 10.0
+MAX_PRESS_DEG = 30.0      # warn when the press face is tilted more than this from the travel direction
+SEAT_FULL_MM, SEAT_ZERO_MM = 6.0, 20.0   # skin this close to a trigger follows it fully, fading to 0 here
 # objects booleaned into the mock-up: everything the hand touches, never the shafts
 MOCK_PARTS = ["abxy cap up", "abxy cap down", "abxy cap left", "abxy cap right",
               "dpad cap up", "dpad cap down", "dpad cap left", "dpad cap right",
@@ -176,6 +178,69 @@ def add_handle_bones(rig):
         b.use_deform = False
     bpy.ops.object.mode_set(mode="OBJECT")
     return tops
+
+
+def add_trigger_seats(rig):
+    """Skin under R2/R4 follows the button handle's move: a deform bone '<part> seat' per trigger
+    (Copy Location from the handle) with weights 1 within SEAT_FULL_MM of the trigger at rest, fading to 0
+    at SEAT_ZERO_MM. The other weights are scaled by (1 - seat) so the sum stays the same. Exception zone,
+    battery, flat top and mirror seam stay pinned by 'grip rig pins' (applied after the armature)."""
+    cage = bpy.data.objects[CAGE]
+    me = cage.data
+    co = np.empty(len(me.vertices) * 3)
+    me.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    dg = bpy.context.evaluated_depsgraph_get()
+    seat = {}
+    for part in BUTTONS:
+        e = bpy.data.objects[part].evaluated_get(dg)
+        m = e.to_mesh()
+        T = np.empty(len(m.vertices) * 3)
+        m.vertices.foreach_get("co", T)
+        e.to_mesh_clear()
+        T = T.reshape(-1, 3) @ np.array(bpy.data.objects[part].matrix_world)[:3, :3].T
+        d = np.min(np.linalg.norm(co[:, None, :] - T[None, ::2, :], axis=2), axis=1)
+        t = np.clip((SEAT_ZERO_MM - d) / (SEAT_ZERO_MM - SEAT_FULL_MM), 0.0, 1.0)
+        seat[part] = t * t * (3 - 2 * t)
+    # the seat only takes weight from 'grip root' (the fixed part), so the scan pose is unchanged
+    root = cage.vertex_groups["grip root"]
+    wsum = np.zeros(len(co))
+    wroot = np.zeros(len(co))
+    for v in me.vertices:
+        for g in v.groups:
+            wsum[v.index] += g.weight
+            if g.group == root.index:
+                wroot[v.index] = g.weight
+    tot = sum(seat.values())
+    share = np.where(tot > 0, np.minimum(tot * wsum, wroot) / np.maximum(tot, 1e-9), 0.0)
+    for part in seat:
+        seat[part] = seat[part] * share                 # absolute weights (same scale as the others)
+    taken = sum(seat.values())
+    for i in np.nonzero(taken > 0)[0]:
+        root.add([int(i)], float(wroot[i] - taken[i]), "REPLACE")
+    for part, w in seat.items():
+        vg = cage.vertex_groups.get(part + " seat") or cage.vertex_groups.new(name=part + " seat")
+        for i in np.nonzero(w > 1e-5)[0]:
+            vg.add([int(i)], float(w[i]), "REPLACE")
+    view = bpy.context.view_layer
+    view.objects.active = rig
+    bpy.ops.object.mode_set(mode="EDIT")
+    eb = rig.data.edit_bones
+    for part in BUTTONS:
+        h = eb[part + " button top"]
+        b = eb.get(part + " seat") or eb.new(part + " seat")
+        b.head, b.tail, b.roll = h.head.copy(), h.tail.copy(), h.roll
+        b.parent = eb["grip root"]
+        b.use_deform = True
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for part in BUTTONS:
+        pb = rig.pose.bones[part + " seat"]
+        c = pb.constraints.new("COPY_LOCATION")
+        c.name = "follow the button"
+        c.target = rig
+        c.subtarget = part + " button top"
+        pb.lock_location = pb.lock_rotation = pb.lock_scale = (True, True, True)
+    return {p: int((w > 1e-3).sum()) for p, w in seat.items()}
 
 
 def eval_cage():
@@ -318,7 +383,8 @@ def bone_collections(rig):
         "grip shape (drag these)": ["palm swell", "fin middle handle", "fin ring handle", "fin pinky handle",
                                     "stand handle", "thenar surface"],
         "buttons (drag these)": ["R2 button top", "R4 button top"],
-        "mechanics (do not touch)": ["grip root", "fin middle", "fin ring", "fin pinky", "stand", "top back edge"],
+        "mechanics (do not touch)": ["grip root", "fin middle", "fin ring", "fin pinky", "stand", "top back edge",
+                                     "R2 seat", "R4 seat"],
     }
     for name, bones in groups.items():
         c = arm.collections.new(name)
@@ -351,6 +417,9 @@ def store_scan_pose(rig):
         orig[part] = {"arch radius": float(node.inputs["arch radius"].default_value),
                       "rot": list(pb.rotation_euler)}
     rig["original_buttons"] = json.dumps(orig)
+    rig["max press angle"] = MAX_PRESS_DEG
+    rig.id_properties_ui("max press angle").update(min=5.0, max=60.0, default=MAX_PRESS_DEG,
+                                                    description="press angle above this shows TOO STEEP")
 
 
 # ---------------------------------------------------------------- mock-up
@@ -516,6 +585,7 @@ def main():
     w = make_widgets(scene)
     add_handle_bones(rig)
     wire_handles(rig, w)
+    log("trigger seats (cage vertices that follow):", add_trigger_seats(rig))
     add_button_drivers(rig)
     bone_collections(rig)
     bpy.context.view_layer.update()
