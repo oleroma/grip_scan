@@ -11,7 +11,7 @@ Drag a ball with **G**, or use the sliders in the 3D view sidebar (**N**) > **Gr
 | `palm swell` (red ball + arrow) | the whole palm swell; every grip handle hangs off it | out / in, along A, along B |
 | `fin middle handle`, `fin ring handle`, `fin pinky handle` | the lobe that finger curls round (the fin bone aims at its ball) | out / in, sideways |
 | `stand handle` | the low end of the handle (it stands on this and the pinky fins) | out / in, sideways |
-| `R1 hand` (double arrow + ring, on the centre of the R1 tab's outer face) | slides the whole hand and the palm swell (so the whole grip shape) along X, and turns them about the X axis through R1. X max puts the index fingertip on the R1 centre; range -5 mm .. max, turn +-15 deg | slide along R1, turn about R1 |
+| `R1 hand` (double arrow + ring, on the centre of the R1 tab's outer face) | X = where along the index finger R1 touches (+ toward the tip; max = fingertip on R1, min = 15 mm toward the knuckles): the whole hand slides along the finger's own curve, like pulling it through a ring at R1. Turn = the hand about the X axis through R1 (+-15 deg). The palm swell follows only the palm's position (`palm follow` 0..1), so the blue `R1 palm link` stretches | contact along the finger, turn about R1, palm follow |
 | `thenar surface` (square) | the surface under the thumb base | out / in, along A, along B |
 | `R2 button top`, `R4 button top` (square + arrow) | centre of the trigger's press face; the arrow is the face direction. G moves it (the arch is refitted to the switch), R rotates it | across the face, out toward the finger, up toward the face buttons, arch radius, tilt (= tip angle offset), sideways tilt (= tip shear) |
 
@@ -41,6 +41,12 @@ and drivers work without it.
 
 The file opens with the heavy case parts (`case`, `case middle plate`) excluded from the view layer;
 only the basemesh and the buttons are in the scene. Tick them back on in the outliner only to check the case.
+
+The slide is precomputed: `add_rig_handles.py` fits a smooth curve through the index joints, and for every
+0.5 mm of contact keys the rigid move (curve point onto the scan contact, curve direction onto the old one)
+into the action `R1 finger slide`; an Action constraint on `hand mover` plays it from the handle's X. The
+hand objects ride on `hand mover`; `palm follow` copies the position of `palm target` (a point carried by the
+hand) and is the parent of `palm swell`.
 
 ## Mock-up print (collection `mock-up print`, hidden by default)
 

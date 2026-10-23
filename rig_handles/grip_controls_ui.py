@@ -16,7 +16,7 @@ CASE_COLLS = ("case", "parts")
 
 # (bone, title, [(kind, index, label), ...])  kind: loc = pose location (mm), prop = custom property
 HAND = [
-    ("R1 hand", "Hand on R1", [("loc", 0, "slide along R1 (max = fingertip on centre)"),
+    ("R1 hand", "Hand on R1", [("loc", 0, "contact along the finger (+ = toward tip)"),
                                ("rot", 0, "turn about R1")]),
 ]
 GRIP = [
@@ -259,14 +259,19 @@ class GRIP_PT_hand(bpy.types.Panel):
 
     def draw(self, context):
         rig = rig_obj()
-        hand = bpy.data.objects.get("hand rig")
         pb = rig.pose.bones.get("R1 hand")
-        if hand is not None and pb is not None:
-            tip = hand.matrix_world @ hand.pose.bones["index_distal"].tail
-            c = rig.matrix_world @ pb.bone.head_local       # R1 top centre (R1 never moves)
-            self.layout.label(text=f"index fingertip is {c.x - tip.x:.1f} mm past the R1 centre")
-        self.layout.label(text="Moves the whole hand and the palm swell with it")
+        info = json.loads(rig.get("index_curve", "{}"))
+        if pb is not None and info:
+            s = info["s0"] + pb.location[0]
+            j = info["joints_mm"]
+            part = ("distal" if s >= j["distal"] else "middle" if s >= j["middle"] else
+                    "proximal" if s >= j["proximal"] else "knuckle")
+            self.layout.label(text=f"R1 touches the index {info['length'] - s:.1f} mm from the tip ({part} phalanx)")
+        self.layout.label(text="The hand slides along the finger; the palm swell follows the palm")
         draw_bones(self.layout, rig, HAND)
+        pf = rig.pose.bones.get("palm follow")
+        if pf is not None and "palm follow" in pf.constraints:
+            self.layout.prop(pf.constraints["palm follow"], "influence", text="palm follow (1 = fully)")
 
 
 class GRIP_PT_shape(bpy.types.Panel):

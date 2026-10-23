@@ -38,7 +38,7 @@ UI_TEXT = "grip_controls_ui.py"
 FINS = ("fin middle", "fin ring", "fin pinky", "stand")
 BUTTONS = {"R2": ("GripV R2 parameters", (15.0, 80.0)), "R4": ("GripV R4 parameters", (40.0, 200.0))}
 BUTTON_RANGE_MM = 10.0
-R1_SLIDE_MIN_MM = -5.0    # R1 hand handle: slide toward -X (the whole hand + palm swell follow)
+R1_SLIDE_MIN_MM = -15.0   # R1 hand handle: contact can move this far toward the knuckles
 R1_TURN_DEG = 15.0        # ... and turn about X by at most this much either way
 HAND_OBJECTS = ("hand rig", "hold marker: R2 press", "hold marker: R4 press", "hold marker: palm swell")
 MAX_PRESS_DEG = 30.0      # warn when the press face is tilted more than this from the travel direction
@@ -268,30 +268,80 @@ def r1_top_centre():
     return Vector(c.tolist())
 
 
+def finger_curve(hand):
+    """Smooth curve through the index joints (metacarpal head .. fingertip), world mm, by arc length."""
+    from scipy.interpolate import CubicSpline
+    names = ("index_metacarpal", "index_proximal", "index_middle", "index_distal")
+    M = hand.matrix_world
+    pts = [M @ hand.pose.bones[names[0]].head] + [M @ hand.pose.bones[n].tail for n in names]
+    P = np.array([list(p) for p in pts])
+    s = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))])
+    return CubicSpline(s, P, bc_type="natural"), s
+
+
+def rot_between(a, b):
+    a = a / np.linalg.norm(a)
+    b = b / np.linalg.norm(b)
+    v = np.cross(a, b)
+    c = float(a @ b)
+    if np.linalg.norm(v) < 1e-12:
+        return np.eye(3)
+    K = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    return np.eye(3) + K + K @ K * (1.0 / (1.0 + c))
+
+
 def add_r1_handle(rig):
-    """'R1 hand' bone at the centre of the R1 tab's outer face (world-aligned): slides only in X and turns only about X.
-    Palm swell (so the whole grip shape) and the hand reference hang off it. X max puts the index
-    fingertip at the button centre."""
+    """'R1 hand' handle on the centre of the R1 tab's outer face: moves only in X, turns only about X.
+
+    X = where along the index finger R1 touches (+ = toward the fingertip; max = fingertip on R1). The
+    hand slides along the finger's own curve (like pulling the finger through a ring at R1): for each
+    contact s the rigid move that puts curve point s where the scan contact s0 was, with the curve's
+    direction there turned onto the old one. Those moves are keyed into the action 'R1 finger slide'
+    (one key per 0.5 mm) and played by an Action constraint on 'hand mover' driven by the handle's X.
+    The turn rotates 'R1 turn' (parent of 'hand mover') about X through the tab centre.
+    The palm swell is NOT rigid to it: 'palm follow' copies only the position of the palm point carried
+    by the hand ('palm target'), with influence = palm follow (0..1); palm swell hangs off 'palm follow'."""
     c = r1_top_centre()
     mk = bpy.data.objects.get("hold marker: R1 target")
     if mk is not None:
-        mk.matrix_world.translation = c                 # the R1 target now sits on R1's top centre
-    hand = bpy.data.objects.get("hand rig")
-    tip = hand.matrix_world @ hand.pose.bones["index_distal"].tail if hand else None
-    slide_max = float(c.x - tip.x) if tip is not None else 10.0
+        mk.matrix_world.translation = c
+    hand = bpy.data.objects["hand rig"]
+    bpy.context.view_layer.update()
+    curve, joints = finger_curve(hand)
+    L = float(joints[-1])
+    ss = np.linspace(0.0, L, 4001)
+    cc = np.array(list(c))
+    s0 = float(ss[np.argmin(np.linalg.norm(curve(ss) - cc, axis=1))])
+    s_min = max(0.0, s0 + R1_SLIDE_MIN_MM)
+    lo, hi = s_min - s0, L - s0                       # handle X range (mm along the finger)
+    ps_rest = rig.data.bones["palm swell"].head_local.copy()
+
     view = bpy.context.view_layer
     view.objects.active = rig
     bpy.ops.object.mode_set(mode="EDIT")
     eb = rig.data.edit_bones
-    b = eb.get("R1 hand") or eb.new("R1 hand")
-    b.head = c
-    b.tail = c + Vector((0.0, 10.0, 0.0))
-    b.roll = 0.0
-    b.parent = eb["grip root"]
-    b.use_deform = False
-    eb["palm swell"].parent = b                         # rest unchanged, so the pose is unchanged
+
+    def bone(name, head, parent, length=10.0, deform=False):
+        b = eb.get(name) or eb.new(name)
+        b.head = head
+        b.tail = head + Vector((0.0, length, 0.0))
+        b.roll = 0.0
+        b.parent = eb[parent] if parent else None
+        b.use_deform = deform
+        return b
+
+    bone("R1 hand", c, "grip root")
+    bone("R1 turn", c, "grip root")
+    bone("hand mover", c, "R1 turn")
+    bone("palm target", ps_rest, "hand mover", 6.0)
+    bone("palm follow", ps_rest, "grip root", 6.0)
+    link = bone("R1 palm link", c, "grip root")
+    link.tail = ps_rest.copy()
+    eb["palm swell"].parent = eb["palm follow"]       # rest unchanged, so the pose is unchanged
     bpy.ops.object.mode_set(mode="OBJECT")
-    pb = rig.pose.bones["R1 hand"]
+    pbs = rig.pose.bones
+
+    pb = pbs["R1 hand"]
     pb.rotation_mode = "XYZ"
     pb.lock_location = (False, True, True)
     pb.lock_rotation = (False, True, True)
@@ -299,7 +349,7 @@ def add_r1_handle(rig):
     cl = pb.constraints.new("LIMIT_LOCATION")
     cl.name = "slide range"
     cl.use_min_x = cl.use_max_x = True
-    cl.min_x, cl.max_x = R1_SLIDE_MIN_MM, slide_max
+    cl.min_x, cl.max_x = lo, hi
     cl.owner_space = "LOCAL"
     cl.use_transform_limit = True
     cr = pb.constraints.new("LIMIT_ROTATION")
@@ -308,20 +358,102 @@ def add_r1_handle(rig):
     cr.min_x, cr.max_x = -math.radians(R1_TURN_DEG), math.radians(R1_TURN_DEG)
     cr.owner_space = "LOCAL"
     cr.use_transform_limit = True
+
+    t = pbs["R1 turn"]
+    ct = t.constraints.new("COPY_ROTATION")
+    ct.name = "turn with the handle"
+    ct.target, ct.subtarget = rig, "R1 hand"
+    ct.use_y = ct.use_z = False
+    ct.target_space = ct.owner_space = "LOCAL"
+
+    # slide action: hand mover pose per contact offset d = s - s0
+    T0 = curve(s0, 1)
+    T0 = T0 / np.linalg.norm(T0)
+    P0 = curve(s0)
+    act = bpy.data.actions.get("R1 finger slide") or bpy.data.actions.new("R1 finger slide")
+    hm = pbs["hand mover"]
+    hm.rotation_mode = "QUATERNION"
+    try:
+        slot = act.slots.new(id_type="OBJECT", name="grip rig")
+    except Exception:
+        slot = None
+    ad = rig.animation_data or rig.animation_data_create()
+    keep_act = ad.action
+    ad.action = act
+    if slot is not None:
+        ad.action_slot = slot
+    from mathutils import Matrix as Mx
+    step = 0.5                                        # keys every 0.5 mm, one exactly at 0 (the scan pose)
+    a_lo, a_hi = math.floor(lo / step) * step, math.ceil(hi / step) * step
+    steps = int(round((a_hi - a_lo) / step))
+    ds = a_lo + step * np.arange(steps + 1)
+    k0 = int(round(-a_lo / step))
+    ds[k0] = 0.0
+    for k, d in enumerate(ds):
+        s = s0 + d
+        Ts = curve(s, 1)
+        R = rot_between(Ts, T0)
+        l = R @ (cc - curve(s)) + P0 - cc
+        if k == k0:
+            R, l = np.eye(3), np.zeros(3)
+        hm.location = l.tolist()
+        hm.rotation_quaternion = Mx(R.tolist()).to_quaternion()
+        hm.keyframe_insert("location", frame=k + 1, group="hand mover")
+        hm.keyframe_insert("rotation_quaternion", frame=k + 1, group="hand mover")
+    try:
+        fcs = act.fcurves
+    except AttributeError:
+        fcs = [fc for lay in act.layers for st in lay.strips for cb in st.channelbags for fc in cb.fcurves]
+    for fc in fcs:
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+    ad.action = keep_act
+    hm.location = (0.0, 0.0, 0.0)
+    hm.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
+    ca = hm.constraints.new("ACTION")
+    ca.name = "slide along the finger"
+    ca.target, ca.subtarget = rig, "R1 hand"
+    ca.transform_channel = "LOCATION_X"
+    ca.target_space = "LOCAL"
+    ca.action = act
+    if slot is not None:
+        try:
+            ca.action_slot = slot
+        except Exception:
+            pass
+    ca.min, ca.max = a_lo, a_hi
+    ca.frame_start, ca.frame_end = 1, steps + 1
+    ca.mix_mode = "BEFORE_FULL"
+
+    pf = pbs["palm follow"]
+    cf = pf.constraints.new("COPY_LOCATION")
+    cf.name = "palm follow"
+    cf.target, cf.subtarget = rig, "palm target"
+    cf.influence = 1.0
+    st = pbs["R1 palm link"].constraints.new("STRETCH_TO")
+    st.name = "stretch to the palm"
+    st.target, st.subtarget = rig, "palm follow"
+    for n in ("R1 turn", "hand mover", "palm target", "palm follow", "R1 palm link"):
+        p = pbs[n]
+        p.lock_location = p.lock_rotation = p.lock_scale = (True, True, True)
+        p.lock_rotation_w = True
+
     view.update()
-    for n in HAND_OBJECTS:                              # the hand moves with the handle
+    for n in HAND_OBJECTS:                              # the hand rides on 'hand mover'
         ob = bpy.data.objects.get(n)
         if ob is None:
             continue
         M = ob.matrix_world.copy()
         ob.parent = rig
         ob.parent_type = "BONE"
-        ob.parent_bone = "R1 hand"
+        ob.parent_bone = "hand mover"
         view.update()
         ob.matrix_world = M
     view.update()
-    return {"centre": [round(x, 2) for x in c], "slide_mm": [R1_SLIDE_MIN_MM, round(slide_max, 2)],
-            "turn_deg": R1_TURN_DEG}
+    seg = {n: round(float(j), 2) for n, j in zip(("knuckle", "proximal", "middle", "distal", "tip"), joints)}
+    rig["index_curve"] = json.dumps({"joints_mm": seg, "s0": s0, "length": L})
+    return {"centre": [round(x, 2) for x in c], "contact_from_tip_mm": round(L - s0, 2),
+            "slide_mm": [round(lo, 2), round(hi, 2)], "turn_deg": R1_TURN_DEG, "keys": steps + 1}
 
 
 def eval_cage():
@@ -464,8 +596,8 @@ def bone_collections(rig):
         "grip shape (drag these)": ["palm swell", "fin middle handle", "fin ring handle", "fin pinky handle",
                                     "stand handle", "thenar surface"],
         "buttons (drag these)": ["R2 button top", "R4 button top"],
-        "hand on R1 (drag this)": ["R1 hand"],
-        "mechanics (do not touch)": ["grip root", "fin middle", "fin ring", "fin pinky", "stand", "top back edge",
+        "hand on R1 (drag this)": ["R1 hand", "R1 palm link"],
+        "mechanics (do not touch)": ["R1 turn", "hand mover", "palm target", "palm follow", "grip root", "fin middle", "fin ring", "fin pinky", "stand", "top back edge",
                                      "R2 seat", "R4 seat"],
     }
     for name, bones in groups.items():
