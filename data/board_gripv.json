@@ -1,0 +1,277 @@
+{
+ "source": {
+  "blend": "D:\\Grip\\blender\\Grip.blend",
+  "scene": "GripV",
+  "variant": "GripV",
+  "saved_variant": "GripX",
+  "blender": "5.2.0 LTS"
+ },
+ "units": "mm",
+ "side": "right half, X >= 0; mirrored at X = 0",
+ "parting_plane_z": 40.0,
+ "top_face": {
+  "z": 59.04,
+  "polygon": [
+   [
+    55.136,
+    -10.329,
+    59.04
+   ],
+   [
+    45.217,
+    -10.329,
+    59.04
+   ],
+   [
+    39.913,
+    -10.329,
+    59.04
+   ],
+   [
+    34.74,
+    -10.329,
+    59.04
+   ],
+   [
+    33.161,
+    -10.329,
+    59.04
+   ],
+   [
+    28.092,
+    -10.329,
+    59.04
+   ],
+   [
+    27.022,
+    -10.329,
+    59.04
+   ],
+   [
+    20.8,
+    -10.329,
+    59.04
+   ],
+   [
+    15.972,
+    -10.329,
+    59.04
+   ],
+   [
+    0.0,
+    -10.329,
+    59.04
+   ],
+   [
+    -0.0,
+    -69.127,
+    59.04
+   ],
+   [
+    15.972,
+    -69.127,
+    59.04
+   ],
+   [
+    26.176,
+    -69.127,
+    59.04
+   ],
+   [
+    30.828,
+    -69.048,
+    59.04
+   ],
+   [
+    45.284,
+    -66.977,
+    59.04
+   ],
+   [
+    61.217,
+    -61.078,
+    59.04
+   ],
+   [
+    70.256,
+    -54.06,
+    59.04
+   ],
+   [
+    73.169,
+    -42.495,
+    59.04
+   ],
+   [
+    64.422,
+    -15.88,
+    59.04
+   ]
+  ],
+  "area": 3848.7,
+  "note": "raw half-mesh n-gon of basemesh GripV; fixed, never moved by the solver"
+ },
+ "thumb_targets": [
+  {
+   "name": "abxy cap up",
+   "top_centre": [
+    49.0,
+    -19.0,
+    61.491
+   ]
+  },
+  {
+   "name": "abxy cap down",
+   "top_centre": [
+    49.0,
+    -43.0,
+    61.492
+   ]
+  },
+  {
+   "name": "abxy cap left",
+   "top_centre": [
+    37.0,
+    -31.0,
+    61.492
+   ]
+  },
+  {
+   "name": "abxy cap right",
+   "top_centre": [
+    61.0,
+    -31.0,
+    61.501
+   ]
+  },
+  {
+   "name": "StickR",
+   "top_centre": [
+    34.0,
+    -52.0,
+    68.119
+   ]
+  },
+  {
+   "name": "select cap top right",
+   "top_centre": [
+    20.0,
+    -19.0,
+    61.491
+   ]
+  },
+  {
+   "name": "select cap down right",
+   "top_centre": [
+    20.0,
+    -31.0,
+    61.491
+   ]
+  },
+  {
+   "name": "home cap",
+   "top_centre": [
+    0.179,
+    -51.95,
+    61.512
+   ]
+  },
+  {
+   "name": "scrollwheel",
+   "top_centre": [
+    18.4,
+    -51.5,
+    61.38
+   ]
+  }
+ ],
+ "r1": {
+  "finger": "index",
+  "target": [
+   37.575,
+   -10.636,
+   47.462
+  ],
+  "normal": [
+   0.0,
+   -0.053,
+   0.999
+  ],
+  "area": 215.2,
+  "note": "upward-facing surface of R1; the index finger may wrap it, not only the tip"
+ },
+ "keep_out": [
+  {
+   "type": "box",
+   "min": [
+    -65.2,
+    -63.151,
+    36.161
+   ],
+   "max": [
+    65.2,
+    -14.052,
+    40.001
+   ],
+   "object": "pcb cutout"
+  }
+ ],
+ "r2": {
+  "finger": "middle",
+  "press_centre": [
+   37.653,
+   -24.373,
+   20.442
+  ],
+  "press_normal": [
+   -0.616,
+   0.699,
+   -0.363
+  ],
+  "press_area": 262.9,
+  "switch": [
+   49.0,
+   -31.001,
+   40.0
+  ],
+  "preview_travel": 0.6,
+  "allowed_region": {
+   "type": "sphere",
+   "centre": [
+    37.653,
+    -24.373,
+    20.442
+   ],
+   "radius": 15.0
+  }
+ },
+ "r4": {
+  "finger": "ring",
+  "press_centre": [
+   38.77,
+   -37.883,
+   8.095
+  ],
+  "press_normal": [
+   -0.645,
+   0.577,
+   -0.501
+  ],
+  "press_area": 275.3,
+  "switch": [
+   52.5,
+   -56.002,
+   40.0
+  ],
+  "preview_travel": 0.55,
+  "allowed_region": {
+   "type": "sphere",
+   "centre": [
+    38.77,
+    -37.883,
+    8.095
+   ],
+   "radius": 15.0
+  }
+ }
+}

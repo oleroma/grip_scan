@@ -1,0 +1,23 @@
+[project]
+name = "gripscan"
+version = "0.1.0"
+description = "Measure a hand and solve a custom controller handle for it"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "numpy",
+    "opencv-contrib-python>=4.8",
+    "mediapipe>=0.10",
+    "pillow",
+]
+
+[project.scripts]
+gripscan-sheet = "gripscan.marker_sheet:main"
+gripscan-calibrate = "gripscan.calibrate:main"
+gripscan-measure-flat = "gripscan.measure_flat:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["gripscan"]
