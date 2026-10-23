@@ -30,6 +30,7 @@ import numpy as np
 from mathutils import Matrix, Vector
 
 RIG = "grip rig"
+RIG_COLL = "grip rig"
 CAGE = "basemesh GripV"
 SCENE = "GripV"
 WGT_COLL = "grip rig widgets"
@@ -48,7 +49,10 @@ MOCK_PARTS = ["abxy cap up", "abxy cap down", "abxy cap left", "abxy cap right",
               "dpad cap up", "dpad cap down", "dpad cap left", "dpad cap right",
               "select cap top left", "select cap top right", "select cap down left", "select cap down right",
               "home cap", "R2", "R4", "L2", "L4", "R1", "L1", "StickR", "StickL", "scrollwheel"]
-PROTECTED = {"/home/claude/Grip/blender/Grip.blend"}
+PROTECTED = {"/home/claude/Grip/blender/Grip.blend", "/home/user/Grip/blender/Grip.blend"}
+EXTENSIONS_DIR = os.environ.get(  # the Grip repo checked out next to grip_scan, unless set
+    "GRIP_EXTENSIONS", os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "Grip", "extensions"))
+EXTENSIONS = ("combi_export", "blender_tracking", "grip_controls", "orca_3mf")
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "trigger_controls"))
 import trigger_model as tm  # noqa: E402
@@ -791,6 +795,39 @@ def light_scene(view_layer):
             lc.exclude = False
 
 
+def tidy(scene):
+    """Everything this adds sits in one top-level collection 'grip rig' next to Olex's own ones, and the
+    added meshes carry their object's name (no 'Sphere.003')."""
+    top = bpy.data.collections[RIG_COLL]
+    for cn in (WGT_COLL, "hand reference (hold_upright)", MOCK_COLL):
+        c = bpy.data.collections.get(cn)
+        if c is None:
+            continue
+        for parent in [scene.collection] + list(bpy.data.collections):
+            if parent is not top and c.name in parent.children:
+                parent.children.unlink(c)
+        if c.name not in top.children:
+            top.children.link(c)
+    for ob in bpy.data.objects:
+        if ob.type == "MESH" and ob.data.users == 1 and ob.data.name.startswith("Sphere"):
+            ob.data.name = ob.name
+
+
+def enable_extensions():
+    """Turn on the same add-ons Grip.blend is made with (the Grip repo's extensions/ folder), so their
+    file data and save handlers behave as in Olex's own Blender."""
+    import addon_utils
+    if not os.path.isdir(EXTENSIONS_DIR):
+        print("WARNING: no Grip extensions folder at", EXTENSIONS_DIR)
+        return
+    repos = bpy.context.preferences.extensions.repos
+    if "grip_repo" not in {r.module for r in repos}:
+        repos.new(name="grip_repo", module="grip_repo", custom_directory=EXTENSIONS_DIR, source='USER')
+    for m in EXTENSIONS:
+        addon_utils.enable("bl_ext.grip_repo." + m, default_set=True)
+        print("add-on", m, "enabled" if addon_utils.check("bl_ext.grip_repo." + m)[1] else "MISSING")
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     stl_dir = None
@@ -800,14 +837,21 @@ def main():
         del argv[i:i + 2]
     src, dst = argv[0], argv[1]
     assert os.path.abspath(dst) not in PROTECTED, "refusing to overwrite Grip.blend"
+    enable_extensions()
     bpy.ops.wm.open_mainfile(filepath=src)
     bpy.data.node_groups["global"].nodes["global parameters"].inputs["variant"].default_value = "GripV"
     scene = bpy.data.scenes[SCENE]
     bpy.context.window.scene = scene
+    ws = bpy.data.workspaces.get(SCENE)
+    if ws is not None:
+        bpy.context.window.workspace = ws              # the GripV workspace tab, not GripX
     for cn in ("grip rig", "hand reference (hold_upright)"):
         c = bpy.data.collections.get(cn)
         if c is not None and c.name not in scene.collection.children:
             scene.collection.children.link(c)
+        for other in bpy.data.scenes:                  # the rig lives only in GripV
+            if other is not scene and c is not None and c.name in other.collection.children:
+                other.collection.children.unlink(c)
     light_scene(bpy.context.view_layer)
     rig = bpy.data.objects[RIG]
     assert "fin middle handle" not in rig.data.bones, "handles already added"
@@ -849,6 +893,7 @@ def main():
             log("wrote", p)
     coll.hide_viewport = True                 # booleans only run when the user shows the mock-up
     whole.hide_viewport = True                # only the two halves show
+    tidy(scene)
     for o in bpy.context.view_layer.objects:
         o.select_set(False)
     bpy.context.view_layer.objects.active = rig

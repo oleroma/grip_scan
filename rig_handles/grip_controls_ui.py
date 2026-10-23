@@ -84,8 +84,8 @@ def apply_pose(rig, P):
     rig.update_tag()
 
 
-class GRIP_OT_reset_scan(bpy.types.Operator):
-    bl_idname = "grip.reset_scan"
+class GRIPRIG_OT_reset_scan(bpy.types.Operator):
+    bl_idname = "griprig.reset_scan"
     bl_label = "Back to scan result"
     bl_description = "Put every handle back where the scan + solver put it"
     bl_options = {"REGISTER", "UNDO"}
@@ -96,8 +96,8 @@ class GRIP_OT_reset_scan(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class GRIP_OT_reset_original(bpy.types.Operator):
-    bl_idname = "grip.reset_original"
+class GRIPRIG_OT_reset_original(bpy.types.Operator):
+    bl_idname = "griprig.reset_original"
     bl_label = "Back to original GripV"
     bl_description = "Clear every move: the grip and the R2/R4 triggers become the original GripV"
     bl_options = {"REGISTER", "UNDO"}
@@ -117,8 +117,8 @@ class GRIP_OT_reset_original(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class GRIP_OT_reset_one(bpy.types.Operator):
-    bl_idname = "grip.reset_one"
+class GRIPRIG_OT_reset_one(bpy.types.Operator):
+    bl_idname = "griprig.reset_one"
     bl_label = "Reset"
     bl_description = "Put this handle back to the scan result"
     bl_options = {"REGISTER", "UNDO"}
@@ -131,8 +131,8 @@ class GRIP_OT_reset_one(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class GRIP_OT_select(bpy.types.Operator):
-    bl_idname = "grip.select"
+class GRIPRIG_OT_select(bpy.types.Operator):
+    bl_idname = "griprig.select"
     bl_label = "Select"
     bl_description = "Select this handle in the viewport (then G to drag it)"
     bone: bpy.props.StringProperty()
@@ -154,8 +154,8 @@ class GRIP_OT_select(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class GRIP_OT_export_mockup(bpy.types.Operator):
-    bl_idname = "grip.export_mockup"
+class GRIPRIG_OT_export_mockup(bpy.types.Operator):
+    bl_idname = "griprig.export_mockup"
     bl_label = "Export mock-up STLs"
     bl_description = "Write mockup_top.stl and mockup_bottom.stl into the folder 'mockup' next to this .blend"
     directory: bpy.props.StringProperty(subtype="DIR_PATH")
@@ -217,9 +217,9 @@ def draw_bones(layout, rig, spec):
         box = layout.box()
         head = box.row(align=True)
         head.label(text=title)
-        op = head.operator("grip.select", text="", icon="RESTRICT_SELECT_OFF")
+        op = head.operator("griprig.select", text="", icon="RESTRICT_SELECT_OFF")
         op.bone = bone
-        op = head.operator("grip.reset_one", text="", icon="LOOP_BACK")
+        op = head.operator("griprig.reset_one", text="", icon="LOOP_BACK")
         op.bone = bone
         col = box.column(align=True)
         for kind, idx, label in rows:
@@ -231,10 +231,10 @@ def draw_bones(layout, rig, spec):
                 col.prop(pb, f'["{idx}"]', text=label + " (mm)")
 
 
-class GRIP_PT_controls(bpy.types.Panel):
+class GRIPRIG_PT_controls(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Grip"
+    bl_category = "Grip rig"
     bl_label = "Grip controls"
 
     @classmethod
@@ -246,16 +246,16 @@ class GRIP_PT_controls(bpy.types.Panel):
         lay = self.layout
         lay.label(text="Drag a ball with G, or use the sliders.")
         row = lay.row(align=True)
-        row.operator("grip.reset_scan", icon="LOOP_BACK")
-        row.operator("grip.reset_original", icon="CANCEL")
+        row.operator("griprig.reset_scan", icon="LOOP_BACK")
+        row.operator("griprig.reset_original", icon="CANCEL")
 
 
-class GRIP_PT_hand(bpy.types.Panel):
+class GRIPRIG_PT_hand(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Grip"
+    bl_category = "Grip rig"
     bl_label = "Hand on R1"
-    bl_parent_id = "GRIP_PT_controls"
+    bl_parent_id = "GRIPRIG_PT_controls"
 
     def draw(self, context):
         rig = rig_obj()
@@ -274,23 +274,23 @@ class GRIP_PT_hand(bpy.types.Panel):
             self.layout.prop(pf.constraints["palm follow"], "influence", text="palm follow (1 = fully)")
 
 
-class GRIP_PT_shape(bpy.types.Panel):
+class GRIPRIG_PT_shape(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Grip"
+    bl_category = "Grip rig"
     bl_label = "Grip shape"
-    bl_parent_id = "GRIP_PT_controls"
+    bl_parent_id = "GRIPRIG_PT_controls"
 
     def draw(self, context):
         draw_bones(self.layout, rig_obj(), GRIP)
 
 
-class GRIP_PT_buttons(bpy.types.Panel):
+class GRIPRIG_PT_buttons(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Grip"
+    bl_category = "Grip rig"
     bl_label = "R2 / R4 triggers"
-    bl_parent_id = "GRIP_PT_controls"
+    bl_parent_id = "GRIPRIG_PT_controls"
 
     def draw(self, context):
         self.layout.label(text="Handle = centre of the press face, arrow = where it faces")
@@ -312,12 +312,12 @@ class GRIP_PT_buttons(bpy.types.Panel):
         draw_bones(self.layout, rig, BUTTONS)
 
 
-class GRIP_PT_mockup(bpy.types.Panel):
+class GRIPRIG_PT_mockup(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Grip"
+    bl_category = "Grip rig"
     bl_label = "Mock-up print"
-    bl_parent_id = "GRIP_PT_controls"
+    bl_parent_id = "GRIPRIG_PT_controls"
 
     def draw(self, context):
         lay = self.layout
@@ -328,11 +328,11 @@ class GRIP_PT_mockup(bpy.types.Panel):
             c = _coll_toggle(n)
             if c is not None:
                 lay.prop(c, "hide_viewport", text=f"Hide '{n}' parts (faster posing)", toggle=True)
-        lay.operator("grip.export_mockup", icon="EXPORT")
+        lay.operator("griprig.export_mockup", icon="EXPORT")
 
 
-CLASSES = (GRIP_OT_reset_scan, GRIP_OT_reset_original, GRIP_OT_reset_one, GRIP_OT_select,
-           GRIP_OT_export_mockup, GRIP_PT_controls, GRIP_PT_hand, GRIP_PT_shape, GRIP_PT_buttons, GRIP_PT_mockup)
+CLASSES = (GRIPRIG_OT_reset_scan, GRIPRIG_OT_reset_original, GRIPRIG_OT_reset_one, GRIPRIG_OT_select,
+           GRIPRIG_OT_export_mockup, GRIPRIG_PT_controls, GRIPRIG_PT_hand, GRIPRIG_PT_shape, GRIPRIG_PT_buttons, GRIPRIG_PT_mockup)
 
 
 def register():
@@ -342,6 +342,20 @@ def register():
         except Exception:
             pass
         bpy.utils.register_class(c)
+    bpy.app.timers.register(_open_gripv_workspace, first_interval=0.5)
+
+
+def _open_gripv_workspace():
+    # Background Blender cannot store the active workspace, so the file is saved on the GripX tab;
+    # switch to the GripV tab once, the first time the file opens on the GripV scene.
+    wm = bpy.context.window_manager
+    ws = bpy.data.workspaces.get("GripV")
+    if wm is None or ws is None or not wm.windows:
+        return None
+    for win in wm.windows:
+        if win.scene.name == "GripV" and win.workspace is not ws:
+            win.workspace = ws
+    return None
 
 
 register()

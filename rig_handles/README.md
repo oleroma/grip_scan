@@ -4,7 +4,7 @@ After the scan and the grip solve, the user corrects the grip by hand and prints
 
 ## Handles (armature `grip rig`, scene `GripV`)
 
-Drag a ball with **G**, or use the sliders in the 3D view sidebar (**N**) > **Grip** tab.
+Drag a ball with **G**, or use the sliders in the 3D view sidebar (**N**) > **Grip rig** tab (your own **Grip** tab with the case settings is untouched).
 
 | handle | moves | slider names |
 |---|---|---|
@@ -47,6 +47,20 @@ The slide is precomputed: `add_rig_handles.py` fits a smooth curve through the i
 into the action `R1 finger slide`; an Action constraint on `hand mover` plays it from the handle's X. The
 hand objects ride on `hand mover`; `palm follow` copies the position of `palm target` (a point carried by the
 hand) and is the parent of `palm swell`.
+
+## Same file as Grip.blend, plus the rig
+
+The output is Grip.blend with additions only: every scene, node group (apart from the trigger controls in
+`GripV R2/R4 parameters`), export preset and setting is unchanged. `GripV_preset.json` and `GripX_preset.json`
+written on save are byte-identical to the ones in the Grip repo. Everything added sits in one top-level
+collection `grip rig` in scene `GripV` (with `grip rig widgets`, `hand reference (hold_upright)` and
+`mock-up print` inside it). The variant is set to GripV and the file opens on the GripV scene.
+
+`add_rig_handles.py` builds with Olex's add-ons on (combi_export, blender_tracking, grip_controls,
+orca_3mf, from the Grip repo's `extensions/` folder next to grip_scan, or `GRIP_EXTENSIONS`), so their save
+handlers stamp the file as in his Blender. Their side files (`*_preset.json`, `tracking.json`) land next to
+the output in `build/`. Background Blender cannot store the active workspace tab, so the panel script
+switches to the GripV workspace once when the file opens with scripts allowed.
 
 ## Mock-up print (collection `mock-up print`, hidden by default)
 

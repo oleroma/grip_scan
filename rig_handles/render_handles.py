@@ -160,7 +160,7 @@ def main():
         sheet.paste(im, ((i % 2) * RES, (i // 2) * RES))
     ImageDraw.Draw(sheet).text(
         (16, RES * 2 + 10),
-        "Top row: the balls you drag (G) or set with sliders in the N panel > Grip tab.\n"
+        "Top row: the balls you drag (G) or set with sliders in the N panel > Grip rig tab.\n"
         "Bottom row: caps, triggers, bumpers, sticks merged into the grip, cut at Z = 40 like the real case.",
         font=ImageFont.truetype(FONT, 24), fill=(0, 0, 0))
     sheet.save(out, quality=90)
