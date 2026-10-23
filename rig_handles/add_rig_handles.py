@@ -130,6 +130,7 @@ def make_widgets(scene):
         "button": widget("WGT button top", [square(10.0, "y"), circle(2.0, "y"), arrow(11.0, head=2.0),
                                              ([(-7, 0, 0), (7, 0, 0)], [(0, 1)]),
                                              ([(0, 0, -7), (0, 0, 7)], [(0, 1)])], coll),
+        "grab": widget("WGT button grab", ball(3.0), coll),
     }
     return w
 
@@ -551,6 +552,123 @@ def wire_handles(rig, w):
             pb.custom_shape_wire_width = 2.5
 
 
+def add_button_follow(rig):
+    """R2/R4 follow the hand: '<part> follow' rides on 'hand mover' (index offset + turn about R1), and
+    '<part> pivot', the button top's new parent, copies its location with influence = the button's
+    'follow hand' (0..1). Only the location: the face direction is set by the tilt below.
+    '<part> tilt' holds how far the face has turned round the arch (Python driver griprig_arch_tilt,
+    set up in add_button_drivers); it is added to the tip angle offset, so the press angle stays as
+    designed ('keep press angle' 0..1). '<part> face' draws the press face and its arrow: the button top's
+    position, its rotation plus the tilt (it cannot be clicked; the ball is the button top)."""
+    view = bpy.context.view_layer
+    view.objects.active = rig
+    bpy.ops.object.mode_set(mode="EDIT")
+    eb = rig.data.edit_bones
+    for part in BUTTONS:
+        bt = eb[part + " button top"]
+        for n, par in ((part + " follow", "hand mover"), (part + " pivot", bt.parent.name),
+                       (part + " tilt", bt.parent.name), (part + " swing", part + " pivot"),
+                       (part + " face", part + " swing")):
+            b = eb.get(n) or eb.new(n)
+            b.head, b.tail, b.roll = bt.head.copy(), bt.tail.copy(), bt.roll
+            b.parent = eb[par]
+            b.use_deform = False
+        bt.parent = eb[part + " pivot"]
+    bpy.ops.object.mode_set(mode="OBJECT")
+    pbs = rig.pose.bones
+    for part in BUTTONS:
+        pb = pbs[part + " button top"]
+        for prop, desc in (("follow hand", "1 = the button top moves with the fingertip when the hand moves "
+                                           "(index offset, turn about R1); 0 = it stays put"),
+                           ("keep press angle", "1 = the face turns with the arch so the press angle stays as "
+                                                "designed wherever the top goes; 0 = the face keeps its direction")):
+            pb[prop] = 1.0
+            pb.id_properties_ui(prop).update(min=0.0, max=1.0, soft_min=0.0, soft_max=1.0, default=1.0,
+                                             precision=2, description=desc)
+        pv = pbs[part + " pivot"]
+        cl = pv.constraints.new("COPY_LOCATION")
+        cl.name = "follow the fingertip"
+        cl.target, cl.subtarget = rig, part + " follow"
+        _prop_driver(cl, "influence", "f", rig, f'pose.bones["{pb.name}"]["follow hand"]')
+        tl = pbs[part + " tilt"]
+        tl.rotation_mode = "XYZ"
+        pbs[part + " swing"].rotation_mode = "XYZ"    # Z = the trigger's swing round its switch (rest Z = world Z)
+        fb = pbs[part + " face"]
+        fb.rotation_mode = "ZYX"
+        cl = fb.constraints.new("COPY_LOCATION")
+        cl.name = "at the button top"
+        cl.target, cl.subtarget = rig, pb.name
+        d = _prop_driver(fb, "rotation_euler", "x", rig, f'pose.bones["{pb.name}"].rotation_euler[0]',
+                         expr="x + p", index=0)
+        v = d.variables.new()
+        v.name, v.type = "p", "SINGLE_PROP"
+        v.targets[0].id = rig
+        v.targets[0].data_path = f'pose.bones["{tl.name}"].rotation_euler[0]'
+        _prop_driver(fb, "rotation_euler", "z", rig, f'pose.bones["{pb.name}"].rotation_euler[2]', index=2)
+        fb.custom_shape = pb.custom_shape
+        fb.custom_shape_wire_width = 2.5
+        fb.use_custom_shape_bone_size = False
+        rig.data.bones[fb.name].hide_select = True
+        rig.data.bones[fb.name].color.palette = rig.data.bones[pb.name].color.palette
+        pb.custom_shape = bpy.data.objects["WGT button grab"]
+        for b in (pv, tl, fb, pbs[part + " follow"], pbs[part + " swing"]):
+            b.lock_location = b.lock_rotation = b.lock_scale = (True, True, True)
+
+
+def _prop_driver(owner, path, vn, rig, data_path, expr=None, index=-1):
+    fc = owner.driver_add(path, index) if index >= 0 else owner.driver_add(path)
+    d = fc.driver
+    d.type = "SCRIPTED"
+    d.expression = expr or vn
+    v = d.variables.new()
+    v.name, v.type = vn, "SINGLE_PROP"
+    v.targets[0].id = rig
+    v.targets[0].data_path = data_path
+    return d
+
+
+def add_arch_tilt(rig, part, f, x0, z0, t0, H0, T0):
+    """Python driver on '<part> tilt' X rotation: griprig_arch_tilt (text block grip_controls_ui.py)."""
+    pbs = rig.pose.bones
+    pb = pbs[part + " button top"]
+    M = rig.matrix_world.to_3x3() @ rig.data.bones[pb.name].matrix_local.to_3x3()
+    bpy.context.view_layer.update()
+    P0 = rig.matrix_world @ pbs[part + " pivot"].head  # what the driver reads at rest (float32)
+    k = dict(M=[list(r) for r in M], H0=[float(c) for c in P0], T0=T0, o0=f["o0"], x0=x0, sh0=f["sh0"],
+             a0=f["a0"], t0=t0, rest=[0.0, 0.0], consts=bpy.app.driver_namespace["griprig_trigger_consts"](part))
+    allk = json.loads(rig.get("arch_tilt", "{}"))
+    allk[part] = k
+    rig["arch_tilt"] = json.dumps(allk)
+    R = float(pb["arch radius"])
+    fn = bpy.app.driver_namespace["griprig_arch_tilt"]
+    k["rest"] = [fn(part, *k["H0"], 0.0, 0.0, 0.0, R, x0, z0, w) for w in (0, 1)]
+    allk[part] = k
+    rig["arch_tilt"] = json.dumps(allk)
+    for bn, idx, expr in ((part + " tilt", 0, f"griprig_arch_tilt('{part}', px, py, pz, lx, ly, lz, r, x, z) * k"),
+                          (part + " swing", 2, f"griprig_arch_tilt('{part}', px, py, pz, lx, ly, lz, r, x, z, 1)")):
+        _tilt_driver(rig, pbs[bn], idx, expr, part, pb)
+    return k["rest"]
+
+
+def _tilt_driver(rig, owner, idx, expr, part, pb):
+    fc = owner.driver_add("rotation_euler", idx)
+    d = fc.driver
+    d.type = "SCRIPTED"
+    d.expression = expr
+    for i, ax in enumerate("xyz"):
+        v = d.variables.new()
+        v.name, v.type = "p" + ax, "TRANSFORMS"
+        t = v.targets[0]
+        t.id, t.bone_target = rig, part + " pivot"
+        t.transform_type, t.transform_space = "LOC_" + ax.upper(), "WORLD_SPACE"
+    for vn, dp in (("lx", "location[0]"), ("ly", "location[1]"), ("lz", "location[2]"), ("r", '["arch radius"]'),
+                   ("x", "rotation_euler[0]"), ("z", "rotation_euler[2]"), ("k", '["keep press angle"]')):
+        v = d.variables.new()
+        v.name, v.type = vn, "SINGLE_PROP"
+        v.targets[0].id = rig
+        v.targets[0].data_path = f'pose.bones["{pb.name}"].{dp}' if not dp.startswith("[") else f'pose.bones["{pb.name}"]{dp}'
+
+
 def add_button_drivers(rig):
     pbs = rig.pose.bones
     for part, (grp, (lo, hi)) in BUTTONS.items():
@@ -584,7 +702,7 @@ def add_button_drivers(rig):
         x0 = float(pb.rotation_euler[0])              # float32 as stored: default gives o0 exactly
         z0 = float(pb.rotation_euler[2])
         t0 = math.tan(z0) / math.cos(f["a0"] - x0)
-        exprs = {"tip angle offset": f"{f['o0']!r} + (x - {x0!r})",
+        exprs = {"tip angle offset": f"{f['o0']!r} + (x - {x0!r}) + p",
                  "tip shear": f"{f['sh0']!r} + tan(z) / cos({f['a0']!r} - x) - {t0!r}"}
         for sname, expr in exprs.items():
             so = node.inputs[sname]
@@ -599,6 +717,12 @@ def add_button_drivers(rig):
                 v.type = "SINGLE_PROP"
                 v.targets[0].id = rig
                 v.targets[0].data_path = f'pose.bones["{pb.name}"].rotation_euler[{i}]'
+            if sname == "tip angle offset":           # + the turn round the arch (0 at the scan)
+                v = d.variables.new()
+                v.name, v.type = "p", "SINGLE_PROP"
+                v.targets[0].id = rig
+                v.targets[0].data_path = f'pose.bones["{part} tilt"].rotation_euler[0]'
+        add_arch_tilt(rig, part, f, x0, float(pb.rotation_euler[2]), t0, H0, T0)
         rs = node.inputs["arch radius"]
         rs.driver_remove("default_value")
         fc = rs.driver_add("default_value")
@@ -618,10 +742,11 @@ def bone_collections(rig):
     groups = {
         "grip shape (drag these)": ["palm swell", "fin middle handle", "fin ring handle", "fin pinky handle",
                                     "stand handle", "thenar surface"],
-        "buttons (drag these)": ["R2 button top", "R4 button top"],
+        "buttons (drag these)": ["R2 button top", "R4 button top", "R2 face", "R4 face"],
         "hand on R1 (drag this)": ["R1 hand", "R1 palm link"],
         "mechanics (do not touch)": ["R1 turn", "hand mover", "palm target", "palm follow", "grip root", "fin middle", "fin ring", "fin pinky", "stand", "top back edge",
-                                     "R2 seat", "R4 seat"],
+                                     "R2 seat", "R4 seat", "R2 follow", "R4 follow", "R2 pivot", "R4 pivot",
+                                     "R2 tilt", "R4 tilt", "R2 swing", "R4 swing"],
     }
     for name, bones in groups.items():
         c = arm.collections.new(name)
@@ -858,6 +983,7 @@ def main():
     src, dst = argv[0], argv[1]
     assert os.path.abspath(dst) not in PROTECTED, "refusing to overwrite Grip.blend"
     enable_extensions()
+    bpy.context.preferences.filepaths.use_scripts_auto_execute = True   # the arch-tilt Python drivers
     bpy.ops.wm.open_mainfile(filepath=src)
     bpy.data.node_groups["global"].nodes["global parameters"].inputs["variant"].default_value = "GripV"
     scene = bpy.data.scenes[SCENE]
@@ -889,6 +1015,8 @@ def main():
     rig.pose.bones["R1 hand"].use_custom_shape_bone_size = False
     rig.pose.bones["R1 hand"].custom_shape_wire_width = 2.5
     rig.data.bones["R1 hand"].color.palette = "THEME01"
+    add_button_follow(rig)
+    install_ui()                                  # registers the arch-tilt driver function
     add_button_drivers(rig)
     bone_collections(rig)
     bpy.context.view_layer.update()
@@ -898,7 +1026,6 @@ def main():
     store_scan_pose(rig)
 
     coll, whole, top, bot = build_mockup(scene)
-    install_ui()
 
     rep = {"cage_change_after_handles_mm": round(shape_change, 5)}
     bpy.context.view_layer.update()

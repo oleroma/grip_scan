@@ -1,4 +1,4 @@
-"""Grip controls: 3D view sidebar (N) > Grip tab.
+"""Grip rig controls: 3D view sidebar (N) > Grip rig tab.
 
 Named sliders for every grip rig handle, resets, mock-up show/export. Lives in the .blend as the text
 block 'grip_controls_ui.py' (registers on load when the file is trusted; otherwise open it in the
@@ -30,24 +30,41 @@ GRIP = [
                                                ("loc", 1, "along B")]),
 ]
 BUTTONS = [
-    ("R2 button top", "R2 trigger", [("loc", 0, "across the face"), ("loc", 1, "out toward the finger"),
+    ("R2 button top", "R2 trigger", [("num", "follow hand", "follow the fingertip (0..1)"),
+                                      ("num", "keep press angle", "keep the press angle (0..1)"),
+                                      ("loc", 0, "across the face"), ("loc", 1, "out toward the finger"),
                                       ("loc", 2, "up toward the face buttons"), ("prop", "arch radius", "arch radius"),
                                       ("rot", 0, "tilt (tip angle offset)"), ("rot", 2, "sideways tilt (tip shear)")]),
-    ("R4 button top", "R4 trigger", [("loc", 0, "across the face"), ("loc", 1, "out toward the finger"),
+    ("R4 button top", "R4 trigger", [("num", "follow hand", "follow the fingertip (0..1)"),
+                                      ("num", "keep press angle", "keep the press angle (0..1)"),
+                                      ("loc", 0, "across the face"), ("loc", 1, "out toward the finger"),
                                       ("loc", 2, "up toward the face buttons"), ("prop", "arch radius", "arch radius"),
                                       ("rot", 0, "tilt (tip angle offset)"), ("rot", 2, "sideways tilt (tip shear)")]),
 ]
 
 
-def press_angle(part):
-    """Angle (deg) between the press face normal and the direction the face travels when pressed
-    (the arch tangent at the face). Same math as trigger_controls/trigger_model.py inverse()."""
-    node = bpy.data.node_groups[f"GripV {part} parameters"].nodes["button top control"]
+def _node(part):
+    return bpy.data.node_groups[f"GripV {part} parameters"].nodes["button top control"]
+
+
+def trigger_consts(part):
+    """The trigger values the arch fit uses that no handle changes, and the switch position."""
+    node = _node(part)
     g = lambda n: float(node.inputs[n].default_value)  # noqa: E731
-    tb, h, bro, ph, xo = g("top bevel"), g("height"), g("button radius offset"), g("button pressed height"), g("x offset")
-    o, sh, R = g("tip angle offset"), g("tip shear"), g("arch radius")
-    smd = node.inputs["SMD button"].default_value.matrix_world.translation
-    top = node.inputs["button top"].default_value
+    return dict(tb=g("top bevel"), h=g("height"), bro=g("button radius offset"), ph=g("button pressed height"),
+                xo=g("x offset"), smd=list(node.inputs["SMD button"].default_value.matrix_world.translation))
+
+
+def arch_angle(part, top, R, o, sh, c=None):
+    """Angle of the press face round the trigger arch for a button top centre (world mm), arch radius R,
+    tip angle offset o and tip shear sh. Same math as trigger_controls/trigger_model.py inverse()."""
+    return arch_solve(part, top, R, o, sh, c)[0]
+
+
+def arch_solve(part, top, R, o, sh, c=None):
+    """-> (arch angle a, button rotation about Z), as arch_angle."""
+    c = c or trigger_consts(part)
+    tb, h, bro, ph, xo, smd = c["tb"], c["h"], c["bro"], c["ph"], c["xo"], c["smd"]
     d = [top[0] - smd[0], top[1] - smd[1], top[2] - (smd[2] - 1.6 - ph)]
     rho = R - h / 2
     a = 0.0
@@ -57,6 +74,7 @@ def press_angle(part):
         n = (v[0] / ln, (v[1] * math.cos(a) - v[2] * math.sin(a)) / ln, (v[1] * math.sin(a) + v[2] * math.cos(a)) / ln)
         qx = xo + tb * n[0]
         qy = math.sqrt(max(d[0] ** 2 + d[1] ** 2 - qx ** 2, 0.0))
+        rot = math.atan2(d[1], d[0]) - math.atan2(qy, qx)
         U = qy - tb * n[1] + bro
         V = d[2] - tb * n[2]
         W = max(math.hypot(U, V), 1e-6)
@@ -65,8 +83,32 @@ def press_angle(part):
         cy = (xx * U - yy * V) / W
         cz = (xx * V + yy * U) / W
         a = math.atan2(U - cy, cz - V)
-    # in the arch frame the travel direction is +Y and the normal is (-sh, 1, -tan(a - o))
+    return a, rot
+
+
+def press_angle(part):
+    """Angle (deg) between the press face normal and the direction the face travels when pressed
+    (the arch tangent at the face): in the arch frame the travel is +Y, the normal (-sh, 1, -tan(a - o))."""
+    node = _node(part)
+    g = lambda n: float(node.inputs[n].default_value)  # noqa: E731
+    o, sh = g("tip angle offset"), g("tip shear")
+    a = arch_angle(part, node.inputs["button top"].default_value, g("arch radius"), o, sh)
     return math.degrees(math.acos(1.0 / math.sqrt(sh * sh + 1.0 + math.tan(a - o) ** 2)))
+
+
+def griprig_arch_tilt(part, px, py, pz, lx, ly, lz, R, x, z, what=0):
+    """Driver: how far the press face has turned round the arch since the scan (rad). The face tilt
+    ('<part> tilt') follows it, so the press angle stays as designed wherever the button top goes.
+    p = '<part> pivot' head (world), l = the button top's own move, x/z = its rotation."""
+    k = json.loads(bpy.data.objects[RIG]["arch_tilt"])[part]
+    M, H0, T0 = k["M"], k["H0"], k["T0"]
+    loc = (lx, ly, lz)
+    top = [T0[i] + (px, py, pz)[i] - H0[i] + sum(M[i][j] * loc[j] for j in range(3)) for i in range(3)]
+    o = k["o0"] + (x - k["x0"])
+    sh = k["sh0"] + math.tan(z) / math.cos(k["a0"] - x) - k["t0"]
+    # what = 0: the turn round the arch; 1: the trigger's swing about Z round its switch (for the arrow)
+    d = arch_solve(part, top, R, o, sh, k["consts"])[what] - k["rest"][what]   # stored: no scene reads in a driver
+    return 0.0 if abs(d) < 1e-7 else d
 
 
 def rig_obj():
@@ -343,6 +385,13 @@ CLASSES = (GRIPRIG_OT_reset_scan, GRIPRIG_OT_reset_original, GRIPRIG_OT_reset_on
 
 
 def register():
+    bpy.app.driver_namespace["griprig_arch_tilt"] = griprig_arch_tilt
+    bpy.app.driver_namespace["griprig_trigger_consts"] = trigger_consts
+    rig = bpy.data.objects.get(RIG)           # drivers that ran before this was registered: run them again
+    if rig is not None and rig.animation_data is not None:
+        for fc in rig.animation_data.drivers:
+            fc.driver.is_valid = True
+        rig.update_tag()
     for c in CLASSES:
         try:
             bpy.utils.unregister_class(getattr(bpy.types, c.__name__))

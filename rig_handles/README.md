@@ -26,6 +26,15 @@ Drag a ball with **G**, or use the sliders in the 3D view sidebar (**N**) > **Gr
 * Bone collections: `grip shape (drag these)`, `buttons (drag these)`, `mechanics (do not touch)` (hidden).
 * Panel buttons: **Back to scan result** (the pose stored in `grip rig["scan_pose"]`), **Back to
   original GripV**, per-handle reset, select.
+* R2/R4 follow the hand: `<part> follow` rides on `hand mover`, and `<part> pivot` (the button top's parent)
+  copies its position with influence = the button's **follow hand** (0..1, default 1). So the index offset
+  and the turn about R1 carry the triggers with the middle and ring fingertips (up to 12.6 mm at offset 0).
+* **Keep press angle** (0..1, default 1): `<part> tilt` = how far the face has turned round the arch since
+  the scan (Python driver `griprig_arch_tilt`, registered by the panel script), added to the tip angle offset.
+  The press angle then stays as designed wherever the top goes (R2 20.8..21.0 deg, R4 16.6..16.8 deg over the
+  whole index offset; without it R4 reaches 26.5 deg). `<part> swing` turns the drawn face with the trigger's
+  swing round its switch, so the arrow (`<part> face`, not clickable) matches the built face within 0.1 deg.
+  The ball is the button top you drag. Without "Allow Execution" the tilt stays at its saved value.
 * Skin under the triggers follows them: hidden deform bones `R2 seat` / `R4 seat` copy the button handle's
   move; cage points within 6 mm of the trigger follow fully, fading to 0 at 20 mm (weight taken only from
   `grip root`, so the scan pose is unchanged). Moving a top 3 mm moves the skin up to 2.2 mm (R2) / 3 mm (R4):
