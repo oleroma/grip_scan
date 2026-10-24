@@ -63,3 +63,5 @@ The MediaPipe hand model goes in `models/hand_landmarker.task`
    `python -m gripscan.measure_flat "photos/flat/*.jpg" --camera data/camera.json --out data/hand_flat.json --annotated-dir out/flat_check`.
 
 Test the geometry chain without photos: `python -m tests.test_geometry`.
+
+The tests run on the dev PC; GitHub CI doesn't run them on push. When the PC is offline, the manual `fallback.yml` workflow runs `tests.test_geometry`, `tests.test_triangulate` and `tests.test_handmodel`.
