@@ -1,0 +1,35 @@
+name: Fallback tests
+
+# Tests run on the dev PC. Run this by hand only when the PC is offline:
+#   gh workflow run fallback.yml --ref <branch>
+# It runs the synthetic checks in tests/. There is nothing to build.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fallback
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Only what the tests import: no mediapipe, headless OpenCV.
+      - name: Install
+        run: pip install numpy "opencv-contrib-python-headless>=4.8" pillow scipy
+
+      - name: Tests
+        run: |
+          python -B -m tests.test_geometry
+          python -B -m tests.test_triangulate
+          python -B -m tests.test_handmodel
