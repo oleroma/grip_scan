@@ -2,7 +2,7 @@
 
     blender -b --factory-startup --python blender/show_hand.py -- \
         --grip data/reference_basemesh_gripv.obj --hand data/hand.json \
-        --placed data/hand_on_grip.json --board data/board_gripv.json --out out/hand_on_grip
+        --placed build/gen/data/hand_on_grip.json --board data/board_gripv.json --out build/gen/out/hand_on_grip
 
 Writes <out>.blend and <out>_<view>.png. Fingers are capsules (spheres at the
 joints joined by cylinders) using the hand's radii; the palm is a hull of the

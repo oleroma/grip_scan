@@ -1,6 +1,6 @@
 """Report how a given hand pose sits on the grip (e.g. the pose you made with the rig).
 
-    python -m gripscan.check_hold data/hand_hold_reference.json
+    python -m gripscan.check_hold build/gen/data/hand_hold_reference.json
 
 Prints the contacts (R1/R2/R4, palm swell, index knuckle position, thumb to
 ABXY), how deep any finger sinks into the grip, and the joint angles compared

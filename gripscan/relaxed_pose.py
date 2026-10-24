@@ -1,7 +1,7 @@
 """Joint angles of the relaxed hand, triangulated from videos shot in front of the board.
 
-    python -m gripscan.relaxed_pose "photos/relaxed/*.mp4" --board-spec data/board_screen.json \
-        --flat data/hand_flat.json --out data/hand_relaxed.json
+    python -m gripscan.relaxed_pose "build/gen/photos/relaxed/*.mp4" --board-spec data/board_screen.json \
+        --flat build/gen/data/hand_flat.json --out build/gen/data/hand_relaxed.json
 
 The right hand floats, relaxed and still, in front of the screen board while
 the phone moves around it. In every frame the board gives the camera pose and
@@ -164,7 +164,7 @@ def main():
     p.add_argument("--flat", required=True, help="hand_flat.json: lengths and palm layout of the model")
     p.add_argument("--fps", type=float, default=10.0)
     p.add_argument("--model", default=None)
-    p.add_argument("--out", default="data/hand_relaxed.json")
+    p.add_argument("--out", default="build/gen/data/hand_relaxed.json")
     a = p.parse_args()
     paths = [f for g in a.videos for f in (sorted(glob.glob(g)) or [g])]
     spec = BoardSpec.load(a.board_spec)

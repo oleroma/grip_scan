@@ -1,8 +1,8 @@
 """Read the posed hand rig back as joint positions (grip coordinates, mm).
 
-    blender -b out/hand_rig.blend --python blender/read_rig.py -- --out data/hand_hold_reference.json
+    blender -b build/gen/out/hand_rig.blend --python blender/read_rig.py -- --out build/gen/data/hand_hold_reference.json
 
-Then: python -m gripscan.check_hold data/hand_hold_reference.json
+Then: python -m gripscan.check_hold build/gen/data/hand_hold_reference.json
 reports the contacts and joint angles of your pose.
 """
 import argparse

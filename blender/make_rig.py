@@ -2,7 +2,7 @@
 
     blender -b --factory-startup --python blender/make_rig.py -- \
         --grip data/reference_basemesh_gripv.obj --hand data/hand.json \
-        --placed data/hand_posed_on_grip.json --board data/board_gripv.json --out out/hand_rig.blend
+        --placed build/gen/data/hand_posed_on_grip.json --board data/board_gripv.json --out build/gen/out/hand_rig.blend
 
 Open the .blend, select "hand rig", Pose Mode: rotate "palm" (moves the whole
 hand; G to move it too) and rotate the finger bones (R). Bone lengths are your

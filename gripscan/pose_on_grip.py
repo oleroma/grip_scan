@@ -1,8 +1,8 @@
 """Pose the hand on an existing grip: placement plus joint changes away from relaxed.
 
     python -m gripscan.pose_on_grip --hand data/hand.json --board data/board_gripv.json \
-        --grip data/reference_basemesh_gripv.obj --init data/hand_on_grip.json \
-        --out data/hand_posed_on_grip.json
+        --grip data/reference_basemesh_gripv.obj --init build/gen/data/hand_on_grip.json \
+        --out build/gen/data/hand_posed_on_grip.json
 
 This is the posture half of the solver, run against a fixed grip. The hand may
 leave its relaxed pose, at a cost of (change / tolerance)^2 per joint, to:
@@ -17,6 +17,7 @@ the current grip forces out of the relaxed hand.
 """
 import argparse
 import json
+import os
 
 import numpy as np
 from scipy.optimize import least_squares
@@ -46,8 +47,8 @@ def main():
     p.add_argument("--hand", default="data/hand.json")
     p.add_argument("--board", default="data/board_gripv.json")
     p.add_argument("--grip", default="data/reference_basemesh_gripv.obj")
-    p.add_argument("--init", default="data/hand_on_grip.json", help="rigid placement to start from")
-    p.add_argument("--out", default="data/hand_posed_on_grip.json")
+    p.add_argument("--init", default="build/gen/data/hand_on_grip.json", help="rigid placement to start from")
+    p.add_argument("--out", default="build/gen/data/hand_posed_on_grip.json")
     p.add_argument("--starts", type=int, default=30)
     p.add_argument("--swell", default=None, help="x,y,z of the palm swell apex (default: the bump on "
                    "the outer side of the right handle, its outermost point in X)")
@@ -220,6 +221,7 @@ def main():
         "placement": {"rotvec": [float(v) for v in x[:3]], "translation": [float(v) for v in x[3:]]},
         "joints_grip_mm": {n: [round(float(c), 2) for c in Jw[i]] for i, n in enumerate(NAMES)},
     }
+    os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     with open(a.out, "w") as f:
         json.dump(result, f, indent=1)
     print(json.dumps(report, indent=1))

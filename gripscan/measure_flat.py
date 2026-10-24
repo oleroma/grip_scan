@@ -1,7 +1,7 @@
 """Measure finger segment lengths from a photo of the hand lying flat on the sheet.
 
-    python -m gripscan.measure_flat photos/flat_top.jpg --camera data/camera.json \
-        --out data/hand_flat.json --annotated out/flat_top_check.jpg
+    python -m gripscan.measure_flat build/gen/photos/flat_top.jpg --camera data/camera.json \
+        --out build/gen/data/hand_flat.json --annotated build/gen/out/flat_top_check.jpg
 
 The hand lies palm down on the printed sheet, fingers straight and slightly
 spread, with as much of the board visible around it as possible. Shoot from
@@ -96,8 +96,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("images", nargs="+", help="one or more photos; several are averaged")
     p.add_argument("--camera", required=True)
-    p.add_argument("--model", default=None, help="hand_landmarker.task (default: models/)")
-    p.add_argument("--out", default="data/hand_flat.json")
+    p.add_argument("--model", default=None, help="hand_landmarker.task (default: build/gen/models/)")
+    p.add_argument("--out", default="build/gen/data/hand_flat.json")
     p.add_argument("--annotated-dir", default=None, help="write a checked copy of each photo here")
     p.add_argument("--board-spec", default=None, help="board json (default: printed sheet)")
     a = p.parse_args()

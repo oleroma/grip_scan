@@ -1,6 +1,6 @@
 """Click two points in a board photo and get their distance in mm (scale check).
 
-    python -m gripscan.measure_points photos/check/caliper.jpg --camera data/camera.json \
+    python -m gripscan.measure_points build/gen/photos/check/caliper.jpg --camera data/camera.json \
         --board-spec data/board_screen.json --height-mm 1.5
 
 Click near the first point, then click it precisely in the zoomed view; same
