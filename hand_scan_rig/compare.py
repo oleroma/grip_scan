@@ -1,7 +1,7 @@
 """Module D: compare the folded scan hand with the photogrammetry data, and tune the skin.
 
-    python compare.py --rig RIG.blend --relaxed data/hand_relaxed.json \
-        --videos "photos/relaxed/*.mp4" --board-spec data/board_screen.json --out DIR
+    python compare.py --rig RIG.blend --relaxed build/gen/data/hand_relaxed.json \
+        --videos "build/gen/photos/relaxed/*.mp4" --board-spec data/board_screen.json --out DIR
     python compare.py synth [render|run|eval|all]     # synthetic test (no real data needed)
 
 Two levels.

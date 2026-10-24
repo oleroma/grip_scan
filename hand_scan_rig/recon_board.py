@@ -2,7 +2,7 @@
 """Hand surface mesh from board videos (camera poses known from the screen board, no SfM).
 
     python recon_board.py --videos "scans/*.mp4" --board-spec data/board_screen.json \
-        --camera data/camera.json --out out/hand_scan.ply
+        --camera data/camera.json --out build/gen/out/hand_scan.ply
 
 Capture (agreed with Olex): open right hand ~15 cm in front of the on-screen ChArUco
 board, forearm resting on books, phone (4K60, manual exposure) sweeping 10-15 s around
@@ -85,7 +85,7 @@ from gripscan.relaxed_pose import pose_of as pose_plain  # noqa: E402
 from gripscan.triangulate import baseline_deg, robust_point  # noqa: E402
 
 MP_MODEL_CANDIDATES = [
-    os.path.join(GRIPSCAN, "models", "hand_landmarker.task"),
+    os.path.join(GRIPSCAN, "build", "gen", "models", "hand_landmarker.task"),
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "hand_landmarker.task"),
     "/tmp/claude-0/hs/work/recon/models/hand_landmarker.task",
 ]

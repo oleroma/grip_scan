@@ -1,6 +1,6 @@
 """Calibrate a phone camera from 10-20 photos of the printed sheet (once per phone).
 
-    python -m gripscan.calibrate photos/calib/*.jpg --out data/camera.json
+    python -m gripscan.calibrate build/gen/photos/calib/*.jpg --out data/camera.json
 
 Shoot the sheet lying flat from different angles and distances, filling
 different parts of the frame. Use the same camera, zoom (1x) and resolution

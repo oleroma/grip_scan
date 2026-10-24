@@ -1,7 +1,7 @@
 """Combine the flat and relaxed measurements into data/hand.json (the solver's hand).
 
-    python -m gripscan.build_hand --flat data/hand_flat.json --relaxed data/hand_relaxed.json \
-        [--widths data/finger_widths.json] --out data/hand.json
+    python -m gripscan.build_hand --flat build/gen/data/hand_flat.json --relaxed build/gen/data/hand_relaxed.json \
+        [--widths data/finger_widths.json] --out build/gen/data/hand.json
 
 Finger widths: caliper values (mm, side to side, middle of each segment) if
 given, otherwise typical adult values. Capsule radius = 0.48 x width (fingers
@@ -9,6 +9,7 @@ are a little wider than deep).
 """
 import argparse
 import json
+import os
 
 import numpy as np
 
@@ -28,10 +29,10 @@ RADIUS_PER_WIDTH = 0.48
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--flat", default="data/hand_flat.json")
-    p.add_argument("--relaxed", default="data/hand_relaxed.json")
+    p.add_argument("--flat", default="build/gen/data/hand_flat.json")
+    p.add_argument("--relaxed", default="build/gen/data/hand_relaxed.json")
     p.add_argument("--widths", default=None, help='{"index": [w1, w2, w3], ..., "palm_thickness": t}')
-    p.add_argument("--out", default="data/hand.json")
+    p.add_argument("--out", default="build/gen/data/hand.json")
     a = p.parse_args()
 
     flat = json.load(open(a.flat))
@@ -77,6 +78,7 @@ def main():
         },
         "sources": {"flat": a.flat, "relaxed": a.relaxed},
     }
+    os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     with open(a.out, "w") as f:
         json.dump(hand, f, indent=1)
     print("->", a.out)

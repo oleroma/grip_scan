@@ -1,7 +1,7 @@
 """Place the relaxed hand (fixed pose) on an existing grip and report the fit.
 
     python -m gripscan.place_hand --hand data/hand.json --board data/board_gripv.json \
-        --grip data/reference_basemesh_gripv.obj --out data/hand_on_grip.json
+        --grip data/reference_basemesh_gripv.obj --out build/gen/data/hand_on_grip.json
 
 A rigid placement (6 DOF) only: the hand keeps its measured relaxed pose. It
 looks for the placement where the middle fingertip rests on R2, the ring
@@ -11,6 +11,7 @@ above or sinks into the surface: how well the grip already fits the relaxed hand
 """
 import argparse
 import json
+import os
 
 import numpy as np
 from scipy.optimize import least_squares
@@ -169,7 +170,7 @@ def main():
     p.add_argument("--hand", default="data/hand.json")
     p.add_argument("--board", default="data/board_gripv.json")
     p.add_argument("--grip", default="data/reference_basemesh_gripv.obj")
-    p.add_argument("--out", default="data/hand_on_grip.json")
+    p.add_argument("--out", default="build/gen/data/hand_on_grip.json")
     p.add_argument("--starts", type=int, default=60)
     a = p.parse_args()
     hand, board = json.load(open(a.hand)), json.load(open(a.board))
@@ -205,6 +206,7 @@ def main():
                  "Thumb distances are for the relaxed thumb; reaching the buttons is a thumb "
                  "movement the solver checks separately."),
     }
+    os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     with open(a.out, "w") as f:
         json.dump(result, f, indent=1)
     print(json.dumps({k: result[k] for k in ("triggers", "palm_gap_to_grip")}, indent=1))

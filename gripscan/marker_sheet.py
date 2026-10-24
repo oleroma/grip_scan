@@ -1,6 +1,6 @@
 """Write the printable ChArUco sheet (A4, print at 100% / "actual size").
 
-    python -m gripscan.marker_sheet --out out/marker_sheet
+    python -m gripscan.marker_sheet --out build/gen/out/marker_sheet
 
 Writes <out>.png (300 dpi) and <out>.pdf. After printing, check the 100 mm
 bar with a ruler: if it is off, the printer scaled the page and the
@@ -47,7 +47,7 @@ def render():
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--out", default="out/marker_sheet")
+    p.add_argument("--out", default="build/gen/out/marker_sheet")
     a = p.parse_args()
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     page = render()

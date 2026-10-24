@@ -52,7 +52,8 @@
 
 ## Heavy work and the PC
 - grip_scan is special: it does heavy optimisation work. Agents may work on Olex's PC (laptop OLEX, checkout `D:\dev\grip_scan`, via Remote Control) and use its GPU/CPU acceleration for optimisation runs.
-- Every product of heavy runs (results, meshes, caches, logs, renders, virtual environments, downloads) goes inside the repo's `gen/` folder, which is gitignored. Nothing like that goes anywhere else in the repo.
+- Like every repo, grip_scan keeps build outputs in the gitignored `build/` folder.
+- Everything else that is generated or private and never pushed (hand photos, videos and scans, hand measurements, optimisation results, meshes, caches, logs, renders, virtual environments, downloads) goes in `build/gen/`. The scripts' default paths already point there: `build/gen/photos/`, `build/gen/data/`, `build/gen/out/` and `build/gen/models/`. Nothing like that goes anywhere else in the repo.
 - Blender work still runs headless in the cloud.
 - Ask Olex only before something really important on the PC. Routine runs need no question.
 

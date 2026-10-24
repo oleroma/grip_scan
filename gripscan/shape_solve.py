@@ -1,6 +1,6 @@
 """Shape solver v1: a new right handle that fills the hollow of the held hand.
 
-    python -m gripscan.shape_solve --pose data/hand_hold_reference.json --out out/handle_v1
+    python -m gripscan.shape_solve --pose build/gen/data/hand_hold_reference.json --out build/gen/out/handle_v1
 
 1. The hand in its hold is turned into a signed distance field (capsules for the
    finger bones, thick capsules along the metacarpals for the palm).
@@ -18,6 +18,7 @@ the hold implies. Trigger placement and smoothing for printing come next.
 """
 import argparse
 import json
+import os
 
 import numpy as np
 from scipy import ndimage
@@ -61,11 +62,11 @@ def smooth_union(a, b, k):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--pose", default="data/hand_hold_reference.json")
+    p.add_argument("--pose", default="build/gen/data/hand_hold_reference.json")
     p.add_argument("--hand", default="data/hand.json")
     p.add_argument("--board", default="data/board_gripv.json")
     p.add_argument("--grip", default="data/reference_basemesh_gripv.obj")
-    p.add_argument("--out", default="out/handle_v1")
+    p.add_argument("--out", default="build/gen/out/handle_v1")
     a = p.parse_args()
     pose, hand, board = json.load(open(a.pose)), json.load(open(a.hand)), json.load(open(a.board))
     J = np.array([pose["joints_grip_mm"][n] for n in NAMES])
@@ -112,6 +113,7 @@ def main():
 
     verts, faces, _, _ = measure.marching_cubes(grip, 0.0, spacing=(VOXEL,) * 3)
     verts += BOUNDS[:, 0]
+    os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     with open(a.out + ".obj", "w") as fh:
         fh.write("# grip_scan handle v1, right half (X >= 0), mm\n")
         for v in verts:

@@ -6,7 +6,7 @@ import numpy as np
 
 MODEL_URL = ("https://storage.googleapis.com/mediapipe-models/hand_landmarker/"
              "hand_landmarker/float16/latest/hand_landmarker.task")
-DEFAULT_MODEL = os.path.join(os.path.dirname(__file__), "..", "models", "hand_landmarker.task")
+DEFAULT_MODEL = os.path.join(os.path.dirname(__file__), "..", "build", "gen", "models", "hand_landmarker.task")
 
 NAMES = [
     "wrist",

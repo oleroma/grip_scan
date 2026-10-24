@@ -50,16 +50,16 @@ uv venv --python 3.12 .venv
 uv pip install --python .venv/Scripts/python.exe -e .
 ```
 
-The MediaPipe hand model goes in `models/hand_landmarker.task`
+The MediaPipe hand model goes in `build/gen/models/hand_landmarker.task`
 (from the MediaPipe model page, `hand_landmarker/float16/latest`).
 
-1. `python -m gripscan.marker_sheet --out out/marker_sheet` prints an A4 sheet
+1. `python -m gripscan.marker_sheet --out build/gen/out/marker_sheet` prints an A4 sheet
    (PDF/PNG). Print at 100% and check the 100 mm bar with a ruler.
 2. Calibrate the phone once: take 10-20 photos of the flat sheet from different
    angles, at 1x zoom, then
-   `python -m gripscan.calibrate "photos/calib/*.jpg" --out data/camera.json`.
+   `python -m gripscan.calibrate "build/gen/photos/calib/*.jpg" --out data/camera.json`.
 3. Lay the hand palm down on the sheet, fingers straight and slightly spread,
    and shoot from straight above at 40-50 cm. Then
-   `python -m gripscan.measure_flat "photos/flat/*.jpg" --camera data/camera.json --out data/hand_flat.json --annotated-dir out/flat_check`.
+   `python -m gripscan.measure_flat "build/gen/photos/flat/*.jpg" --camera data/camera.json --out build/gen/data/hand_flat.json --annotated-dir build/gen/out/flat_check`.
 
 Test the geometry chain without photos: `python -m tests.test_geometry`.
